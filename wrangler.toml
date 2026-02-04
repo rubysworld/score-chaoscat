@@ -1,0 +1,14 @@
+name = "score-chaoscat"
+main = "src/index.js"
+compatibility_date = "2024-01-01"
+
+routes = [
+  { pattern = "score.chaoscat.win/*", zone_id = "584f107fc4b1f949b4dc989b04567b41" }
+]
+
+[[kv_namespaces]]
+binding = "SCORES_KV"
+id = "PLACEHOLDER_KV_ID"
+
+[vars]
+API_KEY = "scs_073af5536bd6c9b2fd95fa1d8fff3028386bd915244965b00273b98da9d89ecc"

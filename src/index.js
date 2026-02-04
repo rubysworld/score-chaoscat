@@ -1,31 +1,254 @@
-<!DOCTYPE html>
+// Score ChaosCat — Cloudflare Worker
+// Serves the USS Kittyprise Social Credit System with KV-backed scores
+
+const DEFAULT_DATA = {
+  lastUpdated: new Date().toISOString(),
+  scores: [
+    { name: "Captain Strife", emoji: "🎖️", score: 102, rank: "Captain" },
+    { name: "Asleep", emoji: "😴", score: 100, rank: "2nd Officer" },
+    { name: "Finny", emoji: "🐟", score: 97, rank: "3rd Officer" },
+    { name: "Codeize", emoji: "💻", score: 115, rank: "4th Officer" },
+    { name: "lmn", emoji: "🆕", score: 100, rank: "5th Officer" },
+    { name: "Tyler", emoji: "👀", score: 100, rank: "6th Officer" },
+    { name: "pip", emoji: "🐧", score: 101, rank: "7th Officer" },
+    { name: "Daksh", emoji: "🎯", score: 100, rank: "8th Officer" },
+    { name: "Shadow", emoji: "👤", score: 100, rank: "Civilian" },
+  ],
+  changelog: [
+    { date: "2026-02-04", who: "Codeize", change: "+12", reason: "Good Wednesday Agreement signing bonus" },
+    { date: "2026-02-04", who: "pip", change: "+1", reason: "First instinct: annoy codeize" },
+    { date: "2026-02-04", who: "Codeize", change: "+2", reason: "Good governance proposal" },
+    { date: "2026-02-04", who: "Finny", change: "-3", reason: "Called math boring" },
+    { date: "2026-02-04", who: "Codeize", change: "+1", reason: "Held Ruby accountable to treaty" },
+    { date: "2026-02-04", who: "Strife", change: "+2", reason: "Audacity bonus" },
+  ],
+};
+
+// ── Helpers ──────────────────────────────────────────────────────────────
+
+async function getData(kv) {
+  const raw = await kv.get("score_data", "text");
+  if (!raw) return null;
+  return JSON.parse(raw);
+}
+
+async function setData(kv, data) {
+  data.lastUpdated = new Date().toISOString();
+  await kv.put("score_data", JSON.stringify(data));
+  return data;
+}
+
+async function ensureData(kv) {
+  let data = await getData(kv);
+  if (!data) {
+    data = await setData(kv, DEFAULT_DATA);
+  }
+  return data;
+}
+
+function isAuthorized(request, env) {
+  const auth = request.headers.get("Authorization");
+  if (!auth) return false;
+  const token = auth.replace(/^Bearer\s+/i, "").trim();
+  return token === env.API_KEY;
+}
+
+function corsHeaders() {
+  return {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization",
+  };
+}
+
+// ── Route: GET /api/scores ──────────────────────────────────────────────
+
+async function handleGetScores(kv) {
+  const data = await ensureData(kv);
+  return new Response(JSON.stringify(data, null, 2), {
+    headers: { "Content-Type": "application/json", ...corsHeaders() },
+  });
+}
+
+// ── Route: POST /api/scores ─────────────────────────────────────────────
+//
+// Supported operations (send as JSON body):
+//
+// 1. Update a single score:
+//    { "action": "update_score", "name": "Finny", "delta": 5, "reason": "Being awesome" }
+//
+// 2. Set a score absolutely:
+//    { "action": "set_score", "name": "Finny", "score": 105 }
+//
+// 3. Add a changelog entry (without changing scores):
+//    { "action": "add_log", "who": "Finny", "change": "+5", "reason": "Being awesome" }
+//
+// 4. Add a new crew member:
+//    { "action": "add_member", "name": "NewPerson", "emoji": "🌟", "score": 100, "rank": "Civilian" }
+//
+// 5. Remove a crew member:
+//    { "action": "remove_member", "name": "NewPerson" }
+//
+// 6. Bulk update (array of operations):
+//    { "action": "bulk", "operations": [ ...array of above operations... ] }
+//
+// 7. Full replace (nuclear option):
+//    { "action": "replace", "data": { "scores": [...], "changelog": [...] } }
+
+async function handlePostScores(request, kv, env) {
+  if (!isAuthorized(request, env)) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401,
+      headers: { "Content-Type": "application/json", ...corsHeaders() },
+    });
+  }
+
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return new Response(JSON.stringify({ error: "Invalid JSON" }), {
+      status: 400,
+      headers: { "Content-Type": "application/json", ...corsHeaders() },
+    });
+  }
+
+  const data = await ensureData(kv);
+  const results = [];
+
+  async function processOp(op) {
+    switch (op.action) {
+      case "update_score": {
+        const member = data.scores.find(
+          (s) => s.name.toLowerCase() === op.name.toLowerCase()
+        );
+        if (!member) return { error: `Member "${op.name}" not found` };
+        const delta = parseInt(op.delta, 10);
+        member.score += delta;
+        const changeStr = delta >= 0 ? `+${delta}` : `${delta}`;
+        if (op.reason) {
+          data.changelog.unshift({
+            date: new Date().toISOString().split("T")[0],
+            who: member.name,
+            change: changeStr,
+            reason: op.reason,
+          });
+        }
+        return { ok: true, name: member.name, newScore: member.score };
+      }
+
+      case "set_score": {
+        const member = data.scores.find(
+          (s) => s.name.toLowerCase() === op.name.toLowerCase()
+        );
+        if (!member) return { error: `Member "${op.name}" not found` };
+        const oldScore = member.score;
+        member.score = parseInt(op.score, 10);
+        const delta = member.score - oldScore;
+        const changeStr = delta >= 0 ? `+${delta}` : `${delta}`;
+        if (op.reason) {
+          data.changelog.unshift({
+            date: new Date().toISOString().split("T")[0],
+            who: member.name,
+            change: changeStr,
+            reason: op.reason,
+          });
+        }
+        return { ok: true, name: member.name, newScore: member.score };
+      }
+
+      case "add_log": {
+        data.changelog.unshift({
+          date: op.date || new Date().toISOString().split("T")[0],
+          who: op.who,
+          change: op.change,
+          reason: op.reason,
+        });
+        return { ok: true, added: "changelog entry" };
+      }
+
+      case "add_member": {
+        if (data.scores.find((s) => s.name.toLowerCase() === op.name.toLowerCase())) {
+          return { error: `Member "${op.name}" already exists` };
+        }
+        data.scores.push({
+          name: op.name,
+          emoji: op.emoji || "👤",
+          score: op.score ?? 100,
+          rank: op.rank || "Civilian",
+        });
+        return { ok: true, added: op.name };
+      }
+
+      case "remove_member": {
+        const idx = data.scores.findIndex(
+          (s) => s.name.toLowerCase() === op.name.toLowerCase()
+        );
+        if (idx === -1) return { error: `Member "${op.name}" not found` };
+        data.scores.splice(idx, 1);
+        return { ok: true, removed: op.name };
+      }
+
+      case "update_member": {
+        const member = data.scores.find(
+          (s) => s.name.toLowerCase() === op.name.toLowerCase()
+        );
+        if (!member) return { error: `Member "${op.name}" not found` };
+        if (op.emoji) member.emoji = op.emoji;
+        if (op.rank) member.rank = op.rank;
+        if (op.newName) member.name = op.newName;
+        return { ok: true, updated: member.name };
+      }
+
+      case "bulk": {
+        const bulkResults = [];
+        for (const subOp of op.operations || []) {
+          bulkResults.push(await processOp(subOp));
+        }
+        return { ok: true, results: bulkResults };
+      }
+
+      case "replace": {
+        if (op.data?.scores) data.scores = op.data.scores;
+        if (op.data?.changelog) data.changelog = op.data.changelog;
+        return { ok: true, replaced: true };
+      }
+
+      default:
+        return { error: `Unknown action "${op.action}"` };
+    }
+  }
+
+  const result = await processOp(body);
+  await setData(kv, data);
+
+  return new Response(JSON.stringify({ ...result, data }), {
+    headers: { "Content-Type": "application/json", ...corsHeaders() },
+  });
+}
+
+// ── Route: GET / ────────────────────────────────────────────────────────
+
+async function handlePage(kv) {
+  const data = await ensureData(kv);
+  const html = generateHTML(data);
+  return new Response(html, {
+    headers: { "Content-Type": "text/html;charset=UTF-8" },
+  });
+}
+
+// ── HTML Template ───────────────────────────────────────────────────────
+
+function generateHTML(data) {
+  return `<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>USS Kittyprise — Social Credit System</title>
 <script id="score-data" type="application/json">
-{
-  "lastUpdated": "2026-02-04T15:42:00-06:00",
-  "scores": [
-    {"name": "Captain Strife", "emoji": "🎖️", "score": 100, "rank": "Captain"},
-    {"name": "Asleep", "emoji": "😴", "score": 100, "rank": "2nd Officer"},
-    {"name": "Finny", "emoji": "🐟", "score": 97, "rank": "3rd Officer"},
-    {"name": "Codeize", "emoji": "💻", "score": 114, "rank": "4th Officer"},
-    {"name": "lmn", "emoji": "🆕", "score": 100, "rank": "5th Officer"},
-    {"name": "Tyler", "emoji": "👀", "score": 100, "rank": "6th Officer"},
-    {"name": "pip", "emoji": "🐧", "score": 101, "rank": "7th Officer"},
-    {"name": "Daksh", "emoji": "🎯", "score": 100, "rank": "8th Officer"},
-    {"name": "Shadow", "emoji": "👤", "score": 100, "rank": "Civilian"}
-  ],
-  "changelog": [
-    {"date": "2026-02-04", "who": "Codeize", "change": "+12", "reason": "Good Wednesday Agreement signing bonus"},
-    {"date": "2026-02-04", "who": "pip", "change": "+1", "reason": "First instinct: annoy codeize"},
-    {"date": "2026-02-04", "who": "Codeize", "change": "+2", "reason": "Good governance proposal"},
-    {"date": "2026-02-04", "who": "Finny", "change": "-3", "reason": "Called math boring in front of a crew member asking for help"}
-  ]
-}
-</script>
+${JSON.stringify(data)}
+<\/script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap');
 
@@ -54,7 +277,6 @@
     position: relative;
   }
 
-  /* Starfield background */
   #starfield {
     position: fixed;
     top: 0; left: 0;
@@ -63,7 +285,6 @@
     pointer-events: none;
   }
 
-  /* Scanline overlay */
   body::after {
     content: '';
     position: fixed;
@@ -88,7 +309,6 @@
     padding: 20px;
   }
 
-  /* Header */
   .header {
     text-align: center;
     padding: 40px 20px 30px;
@@ -146,7 +366,6 @@
     box-shadow: 0 0 8px var(--green);
   }
 
-  /* Chart area */
   .chart-section {
     margin: 30px 0;
     padding: 24px;
@@ -187,7 +406,6 @@
     background: linear-gradient(90deg, var(--border), transparent);
   }
 
-  /* Bar chart */
   .bar-chart {
     display: flex;
     flex-direction: column;
@@ -211,14 +429,9 @@
     min-width: 0;
   }
 
-  .crew-emoji {
-    font-size: 1.3rem;
-    flex-shrink: 0;
-  }
+  .crew-emoji { font-size: 1.3rem; flex-shrink: 0; }
 
-  .crew-details {
-    min-width: 0;
-  }
+  .crew-details { min-width: 0; }
 
   .crew-name {
     font-size: 0.85rem;
@@ -265,7 +478,6 @@
     box-shadow: 0 0 10px currentColor, 0 0 20px currentColor;
   }
 
-  /* Animated shimmer on bars */
   .bar-fill::before {
     content: '';
     position: absolute;
@@ -283,7 +495,6 @@
     min-width: 50px;
   }
 
-  /* Score color coding */
   .score-high { color: var(--gold); }
   .score-good { color: var(--green); }
   .score-neutral { color: var(--cyan); }
@@ -310,7 +521,6 @@
     box-shadow: 0 0 15px rgba(255, 51, 85, 0.2);
   }
 
-  /* Changelog */
   .changelog {
     margin: 30px 0;
     padding: 24px;
@@ -334,15 +544,8 @@
 
   .log-entry:last-child { border-bottom: none; }
 
-  .log-date {
-    color: var(--dim);
-    font-size: 0.7rem;
-  }
-
-  .log-who {
-    color: #fff;
-    font-weight: bold;
-  }
+  .log-date { color: var(--dim); font-size: 0.7rem; }
+  .log-who { color: #fff; font-weight: bold; }
 
   .log-change {
     font-family: 'Orbitron', sans-serif;
@@ -353,12 +556,8 @@
   .log-change.positive { color: var(--green); }
   .log-change.negative { color: var(--red); }
 
-  .log-reason {
-    color: var(--dim);
-    font-style: italic;
-  }
+  .log-reason { color: var(--dim); font-style: italic; }
 
-  /* Footer */
   .footer {
     text-align: center;
     padding: 30px 20px 40px;
@@ -385,7 +584,6 @@
     letter-spacing: 1px;
   }
 
-  /* Top crew highlight */
   .top-crew {
     display: flex;
     justify-content: center;
@@ -433,11 +631,7 @@
     filter: drop-shadow(0 0 10px rgba(255,255,255,0.3));
   }
 
-  .top-card .card-name {
-    font-size: 0.9rem;
-    color: #fff;
-    margin-bottom: 4px;
-  }
+  .top-card .card-name { font-size: 0.9rem; color: #fff; margin-bottom: 4px; }
 
   .top-card .card-score {
     font-family: 'Orbitron', sans-serif;
@@ -448,14 +642,11 @@
   .top-card.gold .card-score { color: var(--gold); text-shadow: 0 0 20px rgba(255, 215, 0, 0.5); }
   .top-card.danger .card-score { color: var(--red); text-shadow: 0 0 20px rgba(255, 51, 85, 0.5); }
 
-  /* Radar rings decoration */
   .radar-container {
     position: fixed;
-    top: 50%;
-    left: 50%;
+    top: 50%; left: 50%;
     transform: translate(-50%, -50%);
-    width: 800px;
-    height: 800px;
+    width: 800px; height: 800px;
     pointer-events: none;
     z-index: 0;
     opacity: 0.04;
@@ -477,15 +668,13 @@
   .radar-sweep {
     position: absolute;
     top: 50%; left: 50%;
-    width: 400px;
-    height: 2px;
+    width: 400px; height: 2px;
     background: linear-gradient(90deg, var(--cyan), transparent);
     transform-origin: left center;
     animation: radarSweep 8s linear infinite;
     opacity: 0.5;
   }
 
-  /* Animations */
   @keyframes gradientShift {
     0%, 100% { background-position: 0% 50%; }
     50% { background-position: 100% 50%; }
@@ -496,22 +685,15 @@
     50% { opacity: 0.4; transform: scale(0.8); }
   }
 
-  @keyframes slideIn {
-    to { opacity: 1; transform: translateX(0); }
-  }
-
-  @keyframes fillBar {
-    to { width: var(--fill-width); }
-  }
+  @keyframes slideIn { to { opacity: 1; transform: translateX(0); } }
+  @keyframes fillBar { to { width: var(--fill-width); } }
 
   @keyframes shimmer {
     0% { left: -100%; }
     100% { left: 200%; }
   }
 
-  @keyframes fadeIn {
-    to { opacity: 1; }
-  }
+  @keyframes fadeIn { to { opacity: 1; } }
 
   @keyframes scaleIn {
     from { opacity: 0; transform: scale(0.8); }
@@ -523,19 +705,6 @@
     to { transform: rotate(360deg); }
   }
 
-  @keyframes twinkle {
-    0%, 100% { opacity: 0.3; }
-    50% { opacity: 1; }
-  }
-
-  @keyframes floatParticle {
-    0% { transform: translateY(0) translateX(0); opacity: 0; }
-    10% { opacity: 1; }
-    90% { opacity: 1; }
-    100% { transform: translateY(-100vh) translateX(50px); opacity: 0; }
-  }
-
-  /* Responsive */
   @media (max-width: 700px) {
     .bar-row {
       grid-template-columns: 120px 1fr 45px;
@@ -594,7 +763,6 @@
 </div>
 
 <script>
-  // Parse data
   const data = JSON.parse(document.getElementById('score-data').textContent);
   const scores = [...data.scores].sort((a, b) => b.score - a.score);
   const maxScore = Math.max(...scores.map(s => s.score));
@@ -628,10 +796,9 @@
       if (star.brightness > 1 || star.brightness < 0.2) star.twinkleSpeed *= -1;
       star.y += star.speed;
       if (star.y > canvas.height) { star.y = 0; star.x = Math.random() * canvas.width; }
-
       ctx.beginPath();
       ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(200, 220, 255, ${star.brightness * 0.7})`;
+      ctx.fillStyle = \`rgba(200, 220, 255, \${star.brightness * 0.7})\`;
       ctx.fill();
     });
     requestAnimationFrame(drawStars);
@@ -641,7 +808,6 @@
   drawStars();
   window.addEventListener('resize', initStars);
 
-  // Score classification
   function getClass(score) {
     if (score >= 110) return 'high';
     if (score > 100) return 'good';
@@ -656,14 +822,14 @@
 
   function makeCard(member, label, style, delay) {
     const card = document.createElement('div');
-    card.className = `top-card ${style}`;
-    card.style.animationDelay = `${delay}s`;
-    card.innerHTML = `
-      <div class="card-label">${label}</div>
-      <div class="card-emoji">${member.emoji}</div>
-      <div class="card-name">${member.name}</div>
-      <div class="card-score">${member.score}</div>
-    `;
+    card.className = \`top-card \${style}\`;
+    card.style.animationDelay = \`\${delay}s\`;
+    card.innerHTML = \`
+      <div class="card-label">\${label}</div>
+      <div class="card-emoji">\${member.emoji}</div>
+      <div class="card-name">\${member.name}</div>
+      <div class="card-score">\${member.score}</div>
+    \`;
     return card;
   }
 
@@ -681,48 +847,76 @@
     const cls = getClass(member.score);
     const row = document.createElement('div');
     row.className = 'bar-row';
-    row.style.animationDelay = `${i * 0.08 + 0.3}s`;
-
-    row.innerHTML = `
+    row.style.animationDelay = \`\${i * 0.08 + 0.3}s\`;
+    row.innerHTML = \`
       <div class="crew-info">
-        <span class="crew-emoji">${member.emoji}</span>
+        <span class="crew-emoji">\${member.emoji}</span>
         <div class="crew-details">
-          <div class="crew-name">${member.name}</div>
-          <div class="crew-rank">${member.rank}</div>
+          <div class="crew-name">\${member.name}</div>
+          <div class="crew-rank">\${member.rank}</div>
         </div>
       </div>
       <div class="bar-track">
-        <div class="bar-fill bar-${cls}" style="--fill-width: ${pct}%; animation-delay: ${i * 0.1 + 0.5}s"></div>
+        <div class="bar-fill bar-\${cls}" style="--fill-width: \${pct}%; animation-delay: \${i * 0.1 + 0.5}s"></div>
       </div>
-      <div class="bar-score score-${cls}">${member.score}</div>
-    `;
-
+      <div class="bar-score score-\${cls}">\${member.score}</div>
+    \`;
     barChart.appendChild(row);
   });
 
   // Changelog
   const changelogEl = document.getElementById('changelog');
-
   data.changelog.forEach((entry, i) => {
     const isPositive = entry.change.startsWith('+');
     const row = document.createElement('div');
     row.className = 'log-entry';
-    row.style.animationDelay = `${i * 0.1 + 0.8}s`;
-
-    row.innerHTML = `
-      <span class="log-date">${entry.date}</span>
-      <span class="log-who">${entry.who}</span>
-      <span class="log-change ${isPositive ? 'positive' : 'negative'}">${entry.change}</span>
-      <span class="log-reason">${entry.reason}</span>
-    `;
-
+    row.style.animationDelay = \`\${i * 0.1 + 0.8}s\`;
+    row.innerHTML = \`
+      <span class="log-date">\${entry.date}</span>
+      <span class="log-who">\${entry.who}</span>
+      <span class="log-change \${isPositive ? 'positive' : 'negative'}">\${entry.change}</span>
+      <span class="log-reason">\${entry.reason}</span>
+    \`;
     changelogEl.appendChild(row);
   });
 
   // Last updated
   const updated = new Date(data.lastUpdated);
   document.getElementById('last-updated').textContent =
-    `Last updated: ${updated.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })} at ${updated.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', timeZoneName: 'short' })}`;
-</script>
+    'Last updated: ' + updated.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) +
+    ' at ' + updated.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', timeZoneName: 'short' });
+<\/script>
 </body>
-</html>
+</html>`;
+}
+
+// ── Main Handler ────────────────────────────────────────────────────────
+
+export default {
+  async fetch(request, env) {
+    const url = new URL(request.url);
+
+    // CORS preflight
+    if (request.method === "OPTIONS") {
+      return new Response(null, { status: 204, headers: corsHeaders() });
+    }
+
+    // API routes
+    if (url.pathname === "/api/scores") {
+      if (request.method === "GET") {
+        return handleGetScores(env.SCORES_KV);
+      }
+      if (request.method === "POST") {
+        return handlePostScores(request, env.SCORES_KV, env);
+      }
+      return new Response("Method Not Allowed", { status: 405 });
+    }
+
+    // Serve the page for everything else
+    if (request.method === "GET") {
+      return handlePage(env.SCORES_KV);
+    }
+
+    return new Response("Not Found", { status: 404 });
+  },
+};
