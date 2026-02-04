@@ -335,7 +335,7 @@ ${JSON.stringify(data)}
     background-size: 200% 200%;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-    animation: gradientShift 4s ease infinite;
+    animation: gradientShift 12s ease infinite;
     text-shadow: 0 0 40px rgba(0, 200, 255, 0.3);
     margin-bottom: 8px;
   }
@@ -484,7 +484,7 @@ ${JSON.stringify(data)}
     top: 0; left: -100%;
     width: 100%; height: 100%;
     background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
-    animation: shimmer 3s ease infinite;
+    animation: shimmer 1.5s ease 1s forwards;
   }
 
   .bar-score {
@@ -671,7 +671,7 @@ ${JSON.stringify(data)}
     width: 400px; height: 2px;
     background: linear-gradient(90deg, var(--cyan), transparent);
     transform-origin: left center;
-    animation: radarSweep 8s linear infinite;
+    animation: radarSweep 4s linear 1 forwards;
     opacity: 0.5;
   }
 
@@ -689,8 +689,9 @@ ${JSON.stringify(data)}
   @keyframes fillBar { to { width: var(--fill-width); } }
 
   @keyframes shimmer {
-    0% { left: -100%; }
-    100% { left: 200%; }
+    0% { left: -100%; opacity: 1; }
+    80% { opacity: 1; }
+    100% { left: 200%; opacity: 0; }
   }
 
   @keyframes fadeIn { to { opacity: 1; } }
@@ -768,45 +769,27 @@ ${JSON.stringify(data)}
   const maxScore = Math.max(...scores.map(s => s.score));
   const minScore = Math.min(...scores.map(s => s.score));
 
-  // Starfield
+  // Starfield — static render (no animation loop)
   const canvas = document.getElementById('starfield');
   const ctx = canvas.getContext('2d');
-  let stars = [];
 
-  function initStars() {
+  function drawStars() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
-    stars = [];
     for (let i = 0; i < 200; i++) {
-      stars.push({
-        x: Math.random() * canvas.width,
-        y: Math.random() * canvas.height,
-        size: Math.random() * 1.5 + 0.5,
-        speed: Math.random() * 0.3 + 0.05,
-        brightness: Math.random(),
-        twinkleSpeed: Math.random() * 0.02 + 0.005
-      });
+      const x = Math.random() * canvas.width;
+      const y = Math.random() * canvas.height;
+      const size = Math.random() * 1.5 + 0.5;
+      const brightness = Math.random() * 0.5 + 0.2;
+      ctx.beginPath();
+      ctx.arc(x, y, size, 0, Math.PI * 2);
+      ctx.fillStyle = \`rgba(200, 220, 255, \${brightness})\`;
+      ctx.fill();
     }
   }
 
-  function drawStars() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    stars.forEach(star => {
-      star.brightness += star.twinkleSpeed;
-      if (star.brightness > 1 || star.brightness < 0.2) star.twinkleSpeed *= -1;
-      star.y += star.speed;
-      if (star.y > canvas.height) { star.y = 0; star.x = Math.random() * canvas.width; }
-      ctx.beginPath();
-      ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
-      ctx.fillStyle = \`rgba(200, 220, 255, \${star.brightness * 0.7})\`;
-      ctx.fill();
-    });
-    requestAnimationFrame(drawStars);
-  }
-
-  initStars();
   drawStars();
-  window.addEventListener('resize', initStars);
+  window.addEventListener('resize', drawStars);
 
   function getClass(score) {
     if (score >= 110) return 'high';
