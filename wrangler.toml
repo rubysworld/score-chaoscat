@@ -8,7 +8,7 @@ routes = [
 
 [[kv_namespaces]]
 binding = "SCORES_KV"
-id = "PLACEHOLDER_KV_ID"
+id = "3c4fd060caba4fa7b7c5610597857ba2"
 
 [vars]
 API_KEY = "scs_073af5536bd6c9b2fd95fa1d8fff3028386bd915244965b00273b98da9d89ecc"
