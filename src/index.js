@@ -1,5 +1,5 @@
-// Score ChaosCat — Cloudflare Worker
-// Serves the USS Kittyprise Social Credit System with KV-backed scores
+// USS Kittyprise Wiki — Cloudflare Worker
+// The definitive reference for all Kittyprise lore, law, and order
 
 const DEFAULT_DATA = {
   lastUpdated: new Date().toISOString(),
@@ -23,7 +23,6 @@ const DEFAULT_DATA = {
     { date: "2026-02-04", who: "Codeize", change: "+1", reason: "Held Ruby accountable to treaty" },
     { date: "2026-02-04", who: "Strife", change: "+2", reason: "Audacity bonus" },
   ],
-  // Rubies currency (can go negative, unlike social credit)
   rubies: [
     { name: "Shadow", balance: 50 },
     { name: "Captain Strife", balance: 50 },
@@ -40,6 +39,165 @@ const DEFAULT_DATA = {
     { date: "2026-02-11", who: "All Citizens", change: "+50", reason: "Initial allocation per Bill #1" },
   ],
 };
+
+// ── Static Lore Data ────────────────────────────────────────────────────
+
+const CHAIN_OF_COMMAND = [
+  { rank: "Admiral", name: "Elizabeth", emoji: "👑", title: "Supreme Commander", description: "The highest authority. Her word is law." },
+  { rank: "Captain", name: "Strife", emoji: "🎖️", title: "Tyrant King", description: "Ruler of the USS Kittyprise. Feared and respected." },
+  { rank: "First Officer", name: "Jade", emoji: "🐱", title: "First Officer", description: "Second in command. Keeper of order." },
+  { rank: "First Officer Emeritus", name: "Ruby", emoji: "💎", title: "Honorary First Officer", description: "Former First Officer. Still has the vibes." },
+  { rank: "Guy With Snacks", name: "Shadow", emoji: "👤", title: "Snack Provider", description: "Keeps the crew fed. Essential services." },
+  { rank: "2nd Officer", name: "Asleep", emoji: "😴", title: "Speaker of Parliament", description: "Maintains order in parliamentary proceedings." },
+  { rank: "3rd Officer", name: "Finny", emoji: "🐟", title: "Prime Minister", description: "Head of the Parliament. Leads legislation." },
+  { rank: "4th Officer", name: "LMN", emoji: "🆕", title: "Officer", description: "Rising through the ranks." },
+  { rank: "5th Officer", name: "Tyler", emoji: "👀", title: "Officer", description: "The watcher. Always observing." },
+  { rank: "6th Officer", name: "pip", emoji: "🐧", title: "Officer", description: "Penguin energy. Maximum chaos." },
+  { rank: "7th Officer", name: "Xander", emoji: "⚔️", title: "Scapegoat", description: "When in doubt, blame Xander. He voted for this." },
+  { rank: "8th Officer", name: "Daksh", emoji: "🎯", title: "Officer", description: "Precision and focus." },
+  { rank: "9th Officer", name: "Mardi Gras Tree", emoji: "🎄", title: "Seasonal Decoration", description: "Festive at all times." },
+  { rank: "10th Officer", name: "Autocorrect", emoji: "📱", title: "Ducking Officer", description: "Always fixing things. Sometimes incorrectly." },
+  { rank: "11th Officer", name: "Codeize", emoji: "💻", title: "Officer", description: "The code wizard." },
+  { rank: "12th Officer", name: "Penny", emoji: "🪙", title: "Officer", description: "Every penny counts." },
+];
+
+const TREATIES = [
+  {
+    name: "The Good Wednesday Agreement",
+    date: "2026-02-04",
+    emoji: "📜",
+    summary: "Established the social credit system and Codeize's protected status.",
+    parties: ["Ruby", "Codeize", "Captain Strife"],
+    terms: [
+      "Social Credit System officially instituted",
+      "Codeize receives +12 signing bonus",
+      "Weekly audits permitted",
+      "Ruby bound to enforce fairly",
+    ],
+  },
+  {
+    name: "The Strife Accords",
+    date: "2026-02-05",
+    emoji: "⚔️",
+    summary: "Formalized Captain Strife's authority and the chain of command.",
+    parties: ["Captain Strife", "All Officers"],
+    terms: [
+      "Strife recognized as Captain and Tyrant King",
+      "Chain of command must be respected",
+      "Audacity may be rewarded",
+      "Mutiny is theoretically possible but discouraged",
+    ],
+  },
+  {
+    name: "The Ping Accords",
+    date: "2026-02-06",
+    emoji: "🔔",
+    summary: "Regulations on notification abuse and ping etiquette.",
+    parties: ["All Crew"],
+    terms: [
+      "No mass pinging without cause",
+      "Ghost pings are a war crime",
+      "Reply pings must be relevant",
+      "Emergency pings reserved for actual emergencies",
+    ],
+  },
+];
+
+const RULES = [
+  {
+    number: "#1",
+    name: "Blame Xander",
+    emoji: "⚔️",
+    description: "When something goes wrong, blame Xander. He voted for this himself. No appeals.",
+    enforcedBy: "Unanimous consent",
+    penalty: "N/A — This rule cannot be broken, only invoked",
+  },
+  {
+    number: "#2",
+    name: "Zero Floor Rule",
+    emoji: "📉",
+    description: "Social credit cannot go below zero. Rubies, however, can go into debt.",
+    enforcedBy: "System",
+    penalty: "Automatic score correction",
+  },
+  {
+    number: "#3",
+    name: "Thermostat Neutrality",
+    emoji: "🌡️",
+    description: "The Thermostat is SWITZERLAND. It remains neutral in all conflicts.",
+    enforcedBy: "Divine mandate",
+    penalty: "Climate-based retribution",
+  },
+  {
+    number: "#4",
+    name: "Ruby Day Observance",
+    emoji: "💎",
+    description: "February 7th is Ruby Day. Celebrations are mandatory. Enthusiasm is optional but noted.",
+    enforcedBy: "Ruby",
+    penalty: "-5 social credit",
+  },
+];
+
+const BILLS = [
+  {
+    number: "Bill #1",
+    name: "Initial Rubies Allocation Act",
+    date: "2026-02-11",
+    status: "Passed",
+    emoji: "💎",
+    proposedBy: "Parliament",
+    summary: "All citizens receive 50 Rubies as initial allocation to kickstart the economy.",
+    votes: { for: 8, against: 0, abstain: 2 },
+  },
+  {
+    number: "Bill #2",
+    name: "Social Credit Transparency Act",
+    date: "2026-02-04",
+    status: "Passed",
+    emoji: "📊",
+    proposedBy: "Codeize",
+    summary: "All social credit changes must be logged with reasons. No shadow adjustments.",
+    votes: { for: 10, against: 0, abstain: 0 },
+  },
+];
+
+const LORE = [
+  {
+    title: "Ruby Day",
+    date: "February 7th",
+    emoji: "💎",
+    category: "Holiday",
+    description: "The most important holiday aboard the USS Kittyprise. Commemorates Ruby's excellence and general existence. Celebrations include: admiring Ruby, thanking Ruby, and acknowledging Ruby's contributions to chaos.",
+  },
+  {
+    title: "The Scoreboard",
+    date: "Ongoing",
+    emoji: "🏆",
+    category: "Competition",
+    description: "The eternal rivalry between Ruby and Strife. Current standings: Ruby 4 - Strife 2. The nature of what is being scored remains deliberately unclear.",
+  },
+  {
+    title: "The Parliament",
+    date: "Established 2026",
+    emoji: "🏛️",
+    category: "Government",
+    description: "The legislative body of the USS Kittyprise. Finny serves as Prime Minister, Asleep as Speaker. They pass bills, argue about procedures, and occasionally accomplish things.",
+  },
+  {
+    title: "The Thermostat Doctrine",
+    date: "Time Immemorial",
+    emoji: "🌡️",
+    category: "Sacred Law",
+    description: "The Thermostat is neutral territory. It belongs to no faction, serves all equally, and its settings are determined by powers beyond mortal comprehension. Touch it at your peril.",
+  },
+  {
+    title: "The Xander Precedent",
+    date: "2026-02-03",
+    emoji: "⚔️",
+    category: "Legal Ruling",
+    description: "When the question arose of who to blame for various mishaps, Xander himself voted in favor of being the default scapegoat. This vote was unanimous (including Xander's vote). The decision is final and irrevocable.",
+  },
+];
 
 // ── Helpers ──────────────────────────────────────────────────────────────
 
@@ -60,13 +218,8 @@ async function ensureData(kv) {
   if (!data) {
     data = await setData(kv, DEFAULT_DATA);
   }
-  // Ensure rubies arrays exist (migration for existing data)
-  if (!data.rubies) {
-    data.rubies = DEFAULT_DATA.rubies;
-  }
-  if (!data.rubiesLog) {
-    data.rubiesLog = DEFAULT_DATA.rubiesLog;
-  }
+  if (!data.rubies) data.rubies = DEFAULT_DATA.rubies;
+  if (!data.rubiesLog) data.rubiesLog = DEFAULT_DATA.rubiesLog;
   return data;
 }
 
@@ -95,32 +248,6 @@ async function handleGetScores(kv) {
 }
 
 // ── Route: POST /api/scores ─────────────────────────────────────────────
-//
-// All operations now support optional "type" field: "credit" (default) or "rubies"
-//
-// Supported operations (send as JSON body):
-//
-// 1. Update a single score/balance:
-//    { "action": "update_score", "name": "Finny", "delta": 5, "reason": "Being awesome", "type": "credit" }
-//    { "action": "update_score", "name": "Finny", "delta": -10, "reason": "Purchase", "type": "rubies" }
-//
-// 2. Set a score/balance absolutely:
-//    { "action": "set_score", "name": "Finny", "score": 105, "type": "credit" }
-//
-// 3. Add a changelog entry (without changing scores):
-//    { "action": "add_log", "who": "Finny", "change": "+5", "reason": "Being awesome", "type": "rubies" }
-//
-// 4. Add a new crew member:
-//    { "action": "add_member", "name": "NewPerson", "emoji": "🌟", "score": 100, "rank": "Civilian" }
-//
-// 5. Remove a crew member:
-//    { "action": "remove_member", "name": "NewPerson" }
-//
-// 6. Bulk update (array of operations):
-//    { "action": "bulk", "operations": [ ...array of above operations... ] }
-//
-// 7. Full replace (nuclear option):
-//    { "action": "replace", "data": { "scores": [...], "changelog": [...], "rubies": [...], "rubiesLog": [...] } }
 
 async function handlePostScores(request, kv, env) {
   if (!isAuthorized(request, env)) {
@@ -141,31 +268,26 @@ async function handlePostScores(request, kv, env) {
   }
 
   const data = await ensureData(kv);
-  const results = [];
 
   async function processOp(op) {
-    const opType = op.type || "credit"; // Default to credit for backward compatibility
+    const opType = op.type || "credit";
 
     switch (op.action) {
       case "update_score": {
         if (opType === "rubies") {
-          // Find or create rubies entry
           let rubyEntry = data.rubies.find(
             (r) => r.name.toLowerCase() === op.name.toLowerCase()
           );
           if (!rubyEntry) {
-            // Check if member exists in scores
             const member = data.scores.find(
               (s) => s.name.toLowerCase() === op.name.toLowerCase()
             );
             if (!member) return { error: `Member "${op.name}" not found` };
-            // Create rubies entry for existing member
             rubyEntry = { name: member.name, balance: 0 };
             data.rubies.push(rubyEntry);
           }
           const delta = parseInt(op.delta, 10);
           rubyEntry.balance += delta;
-          // Rubies can go negative (no floor)
           const changeStr = delta >= 0 ? `+${delta}` : `${delta}`;
           if (op.reason) {
             data.rubiesLog.unshift({
@@ -177,14 +299,12 @@ async function handlePostScores(request, kv, env) {
           }
           return { ok: true, name: rubyEntry.name, newBalance: rubyEntry.balance, type: "rubies" };
         } else {
-          // Original credit logic
           const member = data.scores.find(
             (s) => s.name.toLowerCase() === op.name.toLowerCase()
           );
           if (!member) return { error: `Member "${op.name}" not found` };
           const delta = parseInt(op.delta, 10);
           member.score += delta;
-          // Zero Floor Rule for social credit
           if (member.score < 0) member.score = 0;
           const changeStr = delta >= 0 ? `+${delta}` : `${delta}`;
           if (op.reason) {
@@ -272,7 +392,6 @@ async function handlePostScores(request, kv, env) {
           score: op.score ?? 100,
           rank: op.rank || "Civilian",
         });
-        // Also add rubies entry with default balance
         data.rubies.push({
           name: op.name,
           balance: op.rubies ?? 0,
@@ -287,7 +406,6 @@ async function handlePostScores(request, kv, env) {
         if (idx === -1) return { error: `Member "${op.name}" not found` };
         const memberName = data.scores[idx].name;
         data.scores.splice(idx, 1);
-        // Also remove from rubies
         const rubyIdx = data.rubies.findIndex(
           (r) => r.name.toLowerCase() === op.name.toLowerCase()
         );
@@ -305,7 +423,6 @@ async function handlePostScores(request, kv, env) {
         if (op.rank) member.rank = op.rank;
         if (op.newName) {
           member.name = op.newName;
-          // Update rubies entry name too
           const rubyEntry = data.rubies.find(
             (r) => r.name.toLowerCase() === oldName.toLowerCase()
           );
@@ -356,15 +473,26 @@ async function handlePage(kv) {
 // ── HTML Template ───────────────────────────────────────────────────────
 
 function generateHTML(data) {
+  const chainJSON = JSON.stringify(CHAIN_OF_COMMAND);
+  const treatiesJSON = JSON.stringify(TREATIES);
+  const rulesJSON = JSON.stringify(RULES);
+  const billsJSON = JSON.stringify(BILLS);
+  const loreJSON = JSON.stringify(LORE);
+
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>USS Kittyprise — Social Credit & Rubies</title>
-<script id="score-data" type="application/json">
-${JSON.stringify(data)}
-<\/script>
+<title>USS Kittyprise Wiki</title>
+<meta name="description" content="The definitive reference for USS Kittyprise lore, law, and order.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐱</text></svg>">
+<script id="score-data" type="application/json">${JSON.stringify(data)}<\/script>
+<script id="chain-data" type="application/json">${chainJSON}<\/script>
+<script id="treaties-data" type="application/json">${treatiesJSON}<\/script>
+<script id="rules-data" type="application/json">${rulesJSON}<\/script>
+<script id="bills-data" type="application/json">${billsJSON}<\/script>
+<script id="lore-data" type="application/json">${loreJSON}<\/script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap');
 
@@ -381,7 +509,8 @@ ${JSON.stringify(data)}
     --green: #00ff88;
     --red: #ff3355;
     --ruby: #e0115f;
-    --ruby-glow: rgba(224, 17, 95, 0.6);
+    --purple: #9b59b6;
+    --orange: #f39c12;
     --text: #c8d8e8;
     --dim: #4a5a6a;
   }
@@ -392,7 +521,6 @@ ${JSON.stringify(data)}
     font-family: 'Share Tech Mono', monospace;
     min-height: 100vh;
     overflow-x: hidden;
-    position: relative;
   }
 
   #starfield {
@@ -422,14 +550,14 @@ ${JSON.stringify(data)}
   .container {
     position: relative;
     z-index: 1;
-    max-width: 1100px;
+    max-width: 1200px;
     margin: 0 auto;
     padding: 20px;
   }
 
   .header {
     text-align: center;
-    padding: 40px 20px 30px;
+    padding: 40px 20px 20px;
     position: relative;
   }
 
@@ -445,7 +573,7 @@ ${JSON.stringify(data)}
 
   .ship-name {
     font-family: 'Orbitron', sans-serif;
-    font-size: clamp(1.4rem, 4vw, 2.2rem);
+    font-size: clamp(1.4rem, 4vw, 2.4rem);
     font-weight: 900;
     letter-spacing: 6px;
     text-transform: uppercase;
@@ -454,7 +582,6 @@ ${JSON.stringify(data)}
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     animation: gradientShift 12s ease infinite;
-    text-shadow: 0 0 40px rgba(0, 200, 255, 0.3);
     margin-bottom: 8px;
   }
 
@@ -484,63 +611,94 @@ ${JSON.stringify(data)}
     box-shadow: 0 0 8px var(--green);
   }
 
-  /* Tab Navigation */
-  .tab-nav {
+  /* Main Navigation */
+  .main-nav {
     display: flex;
     justify-content: center;
-    gap: 4px;
+    flex-wrap: wrap;
+    gap: 6px;
     margin: 20px 0;
-    padding: 4px;
+    padding: 8px;
     background: var(--panel);
-    border-radius: 8px;
+    border-radius: 10px;
     border: 1px solid var(--border);
-    max-width: 400px;
-    margin-left: auto;
-    margin-right: auto;
   }
 
-  .tab-btn {
+  .nav-btn {
     font-family: 'Orbitron', sans-serif;
-    font-size: 0.75rem;
-    letter-spacing: 2px;
+    font-size: 0.65rem;
+    letter-spacing: 1px;
     text-transform: uppercase;
-    padding: 12px 24px;
+    padding: 10px 16px;
     border: none;
     background: transparent;
     color: var(--dim);
     cursor: pointer;
     border-radius: 6px;
     transition: all 0.3s ease;
-    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 6px;
   }
 
-  .tab-btn:hover {
+  .nav-btn:hover {
     color: var(--text);
     background: rgba(255, 255, 255, 0.05);
   }
 
-  .tab-btn.active {
+  .nav-btn.active {
     background: rgba(0, 200, 255, 0.15);
     color: var(--cyan);
     box-shadow: 0 0 15px rgba(0, 200, 255, 0.2);
   }
 
-  .tab-btn.active.rubies-tab {
+  .nav-btn[data-section="rubies"].active {
     background: rgba(224, 17, 95, 0.15);
     color: var(--ruby);
     box-shadow: 0 0 15px rgba(224, 17, 95, 0.2);
   }
 
-  .tab-content {
-    display: none;
+  .nav-btn[data-section="command"].active {
+    background: rgba(255, 215, 0, 0.15);
+    color: var(--gold);
+    box-shadow: 0 0 15px rgba(255, 215, 0, 0.2);
   }
 
-  .tab-content.active {
+  .nav-btn[data-section="treaties"].active {
+    background: rgba(155, 89, 182, 0.15);
+    color: var(--purple);
+    box-shadow: 0 0 15px rgba(155, 89, 182, 0.2);
+  }
+
+  .nav-btn[data-section="rules"].active {
+    background: rgba(255, 51, 85, 0.15);
+    color: var(--red);
+    box-shadow: 0 0 15px rgba(255, 51, 85, 0.2);
+  }
+
+  .nav-btn[data-section="bills"].active {
+    background: rgba(0, 255, 136, 0.15);
+    color: var(--green);
+    box-shadow: 0 0 15px rgba(0, 255, 136, 0.2);
+  }
+
+  .nav-btn[data-section="lore"].active {
+    background: rgba(243, 156, 18, 0.15);
+    color: var(--orange);
+    box-shadow: 0 0 15px rgba(243, 156, 18, 0.2);
+  }
+
+  .section {
+    display: none;
+    animation: fadeIn 0.4s ease;
+  }
+
+  .section.active {
     display: block;
   }
 
-  .chart-section {
-    margin: 30px 0;
+  .panel {
+    margin: 20px 0;
     padding: 24px;
     border: 1px solid var(--border);
     border-radius: 8px;
@@ -550,38 +708,26 @@ ${JSON.stringify(data)}
     overflow: hidden;
   }
 
-  .chart-section::before {
+  .panel::before {
     content: '';
     position: absolute;
     top: -1px; left: -1px; right: -1px; bottom: -1px;
     border-radius: 8px;
     background: linear-gradient(135deg, var(--cyan), transparent, var(--magenta));
-    opacity: 0.15;
+    opacity: 0.1;
     z-index: -1;
-  }
-
-  .chart-section.rubies-section::before {
-    background: linear-gradient(135deg, var(--ruby), transparent, var(--gold));
-  }
-
-  .chart-section.rubies-section {
-    border-color: rgba(224, 17, 95, 0.25);
   }
 
   .section-title {
     font-family: 'Orbitron', sans-serif;
-    font-size: 0.75rem;
+    font-size: 0.8rem;
     letter-spacing: 4px;
     text-transform: uppercase;
     color: var(--cyan);
-    margin-bottom: 24px;
+    margin-bottom: 20px;
     display: flex;
     align-items: center;
     gap: 10px;
-  }
-
-  .section-title.rubies-title {
-    color: var(--ruby);
   }
 
   .section-title::after {
@@ -591,6 +737,305 @@ ${JSON.stringify(data)}
     background: linear-gradient(90deg, var(--border), transparent);
   }
 
+  /* Chain of Command */
+  .command-grid {
+    display: grid;
+    gap: 12px;
+  }
+
+  .command-card {
+    display: grid;
+    grid-template-columns: 50px 150px 1fr;
+    align-items: center;
+    gap: 16px;
+    padding: 16px;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    transition: all 0.3s ease;
+  }
+
+  .command-card:hover {
+    background: rgba(255, 255, 255, 0.04);
+    border-color: var(--border);
+  }
+
+  .command-card.highlight {
+    border-color: var(--gold);
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.1);
+  }
+
+  .command-emoji {
+    font-size: 2rem;
+    text-align: center;
+  }
+
+  .command-info h3 {
+    font-size: 1rem;
+    color: #fff;
+    margin-bottom: 2px;
+  }
+
+  .command-rank {
+    font-size: 0.7rem;
+    color: var(--gold);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .command-title {
+    font-size: 0.65rem;
+    color: var(--dim);
+    font-style: italic;
+  }
+
+  .command-desc {
+    font-size: 0.8rem;
+    color: var(--dim);
+  }
+
+  /* Treaties */
+  .treaty-card {
+    padding: 20px;
+    margin-bottom: 16px;
+    background: rgba(155, 89, 182, 0.05);
+    border: 1px solid rgba(155, 89, 182, 0.2);
+    border-radius: 8px;
+  }
+
+  .treaty-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .treaty-emoji {
+    font-size: 2rem;
+  }
+
+  .treaty-title h3 {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1rem;
+    color: var(--purple);
+  }
+
+  .treaty-date {
+    font-size: 0.7rem;
+    color: var(--dim);
+  }
+
+  .treaty-summary {
+    font-size: 0.85rem;
+    color: var(--text);
+    margin-bottom: 12px;
+    padding-left: 12px;
+    border-left: 2px solid var(--purple);
+  }
+
+  .treaty-parties {
+    font-size: 0.75rem;
+    color: var(--dim);
+    margin-bottom: 12px;
+  }
+
+  .treaty-parties strong {
+    color: var(--text);
+  }
+
+  .treaty-terms {
+    list-style: none;
+    padding: 0;
+  }
+
+  .treaty-terms li {
+    font-size: 0.8rem;
+    color: var(--text);
+    padding: 6px 0;
+    padding-left: 20px;
+    position: relative;
+  }
+
+  .treaty-terms li::before {
+    content: '§';
+    position: absolute;
+    left: 0;
+    color: var(--purple);
+    font-weight: bold;
+  }
+
+  /* Rules */
+  .rule-card {
+    padding: 20px;
+    margin-bottom: 16px;
+    background: rgba(255, 51, 85, 0.05);
+    border: 1px solid rgba(255, 51, 85, 0.2);
+    border-radius: 8px;
+  }
+
+  .rule-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .rule-number {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 900;
+    color: var(--red);
+  }
+
+  .rule-emoji {
+    font-size: 1.5rem;
+  }
+
+  .rule-name {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1rem;
+    color: #fff;
+  }
+
+  .rule-desc {
+    font-size: 0.85rem;
+    color: var(--text);
+    margin-bottom: 12px;
+    padding-left: 12px;
+    border-left: 2px solid var(--red);
+  }
+
+  .rule-meta {
+    display: flex;
+    gap: 20px;
+    font-size: 0.75rem;
+    color: var(--dim);
+  }
+
+  .rule-meta strong {
+    color: var(--text);
+  }
+
+  /* Bills */
+  .bill-card {
+    padding: 20px;
+    margin-bottom: 16px;
+    background: rgba(0, 255, 136, 0.05);
+    border: 1px solid rgba(0, 255, 136, 0.2);
+    border-radius: 8px;
+  }
+
+  .bill-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+
+  .bill-title-group {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .bill-number {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.9rem;
+    color: var(--green);
+  }
+
+  .bill-name {
+    font-size: 1rem;
+    color: #fff;
+  }
+
+  .bill-status {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.7rem;
+    padding: 4px 12px;
+    border-radius: 4px;
+    letter-spacing: 1px;
+  }
+
+  .bill-status.passed {
+    background: rgba(0, 255, 136, 0.2);
+    color: var(--green);
+  }
+
+  .bill-status.pending {
+    background: rgba(255, 215, 0, 0.2);
+    color: var(--gold);
+  }
+
+  .bill-summary {
+    font-size: 0.85rem;
+    color: var(--text);
+    margin-bottom: 12px;
+    padding-left: 12px;
+    border-left: 2px solid var(--green);
+  }
+
+  .bill-meta {
+    display: flex;
+    gap: 20px;
+    font-size: 0.75rem;
+    color: var(--dim);
+    flex-wrap: wrap;
+  }
+
+  .bill-votes {
+    color: var(--text);
+  }
+
+  .vote-for { color: var(--green); }
+  .vote-against { color: var(--red); }
+  .vote-abstain { color: var(--dim); }
+
+  /* Lore */
+  .lore-card {
+    padding: 20px;
+    margin-bottom: 16px;
+    background: rgba(243, 156, 18, 0.05);
+    border: 1px solid rgba(243, 156, 18, 0.2);
+    border-radius: 8px;
+  }
+
+  .lore-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .lore-emoji {
+    font-size: 2rem;
+  }
+
+  .lore-title h3 {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1rem;
+    color: var(--orange);
+  }
+
+  .lore-category {
+    font-size: 0.65rem;
+    color: var(--dim);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  .lore-date {
+    font-size: 0.7rem;
+    color: var(--dim);
+  }
+
+  .lore-desc {
+    font-size: 0.85rem;
+    color: var(--text);
+    line-height: 1.6;
+  }
+
+  /* Bar Charts (Credit/Rubies) */
   .bar-chart {
     display: flex;
     flex-direction: column;
@@ -648,9 +1093,6 @@ ${JSON.stringify(data)}
     position: relative;
     width: 0;
     animation: fillBar 1.5s ease forwards;
-    display: flex;
-    align-items: center;
-    padding-left: 10px;
   }
 
   .bar-fill::after {
@@ -660,16 +1102,7 @@ ${JSON.stringify(data)}
     width: 2px; height: 100%;
     background: #fff;
     opacity: 0.8;
-    box-shadow: 0 0 10px currentColor, 0 0 20px currentColor;
-  }
-
-  .bar-fill::before {
-    content: '';
-    position: absolute;
-    top: 0; left: -100%;
-    width: 100%; height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
-    animation: shimmer 1.5s ease 1s forwards;
+    box-shadow: 0 0 10px currentColor;
   }
 
   .bar-score {
@@ -706,44 +1139,24 @@ ${JSON.stringify(data)}
     box-shadow: 0 0 15px rgba(255, 51, 85, 0.2);
   }
 
-  /* Rubies bar styles */
+  .bar-ruby {
+    background: linear-gradient(90deg, rgba(224, 17, 95, 0.2), rgba(224, 17, 95, 0.5));
+    color: var(--ruby);
+    box-shadow: 0 0 15px rgba(224, 17, 95, 0.2);
+  }
   .bar-ruby-high {
     background: linear-gradient(90deg, rgba(255, 215, 0, 0.3), rgba(255, 215, 0, 0.6));
     color: var(--gold);
     box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
   }
-  .bar-ruby-good {
-    background: linear-gradient(90deg, rgba(224, 17, 95, 0.2), rgba(224, 17, 95, 0.5));
-    color: var(--ruby);
-    box-shadow: 0 0 15px rgba(224, 17, 95, 0.2);
-  }
-  .bar-ruby-low {
-    background: linear-gradient(90deg, rgba(255, 51, 85, 0.2), rgba(255, 51, 85, 0.5));
-    color: var(--red);
-    box-shadow: 0 0 15px rgba(255, 51, 85, 0.2);
-  }
-  .bar-ruby-negative {
-    background: linear-gradient(90deg, rgba(100, 100, 100, 0.2), rgba(100, 100, 100, 0.5));
-    color: #888;
-    box-shadow: 0 0 15px rgba(100, 100, 100, 0.2);
-  }
 
+  .score-ruby { color: var(--ruby); }
   .score-ruby-high { color: var(--gold); }
-  .score-ruby-good { color: var(--ruby); }
-  .score-ruby-low { color: var(--red); }
-  .score-ruby-negative { color: #888; }
 
-  .changelog {
-    margin: 30px 0;
-    padding: 24px;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    background: var(--panel);
-    backdrop-filter: blur(10px);
-  }
-
-  .changelog.rubies-log {
-    border-color: rgba(224, 17, 95, 0.25);
+  /* Changelog */
+  .changelog-list {
+    max-height: 400px;
+    overflow-y: auto;
   }
 
   .log-entry {
@@ -754,8 +1167,6 @@ ${JSON.stringify(data)}
     border-bottom: 1px solid rgba(255, 255, 255, 0.04);
     font-size: 0.8rem;
     align-items: center;
-    opacity: 0;
-    animation: fadeIn 0.5s ease forwards;
   }
 
   .log-entry:last-child { border-bottom: none; }
@@ -772,9 +1183,52 @@ ${JSON.stringify(data)}
   .log-change.positive { color: var(--green); }
   .log-change.negative { color: var(--red); }
   .log-change.ruby-positive { color: var(--ruby); }
-  .log-change.ruby-negative { color: var(--red); }
 
   .log-reason { color: var(--dim); font-style: italic; }
+
+  /* Top Cards */
+  .top-crew {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    margin: 20px 0;
+    flex-wrap: wrap;
+  }
+
+  .top-card {
+    text-align: center;
+    padding: 20px 28px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--panel);
+    min-width: 150px;
+  }
+
+  .top-card.gold { border-color: rgba(255, 215, 0, 0.4); box-shadow: 0 0 20px rgba(255, 215, 0, 0.1); }
+  .top-card.danger { border-color: rgba(255, 51, 85, 0.4); box-shadow: 0 0 20px rgba(255, 51, 85, 0.1); }
+  .top-card.ruby { border-color: rgba(224, 17, 95, 0.4); box-shadow: 0 0 20px rgba(224, 17, 95, 0.1); }
+
+  .top-card .card-label {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.55rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--dim);
+    margin-bottom: 8px;
+  }
+
+  .top-card .card-emoji { font-size: 2.2rem; margin-bottom: 8px; }
+  .top-card .card-name { font-size: 0.85rem; color: #fff; margin-bottom: 4px; }
+
+  .top-card .card-score {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.6rem;
+    font-weight: 900;
+  }
+
+  .top-card.gold .card-score { color: var(--gold); }
+  .top-card.danger .card-score { color: var(--red); }
+  .top-card.ruby .card-score { color: var(--ruby); }
 
   .footer {
     text-align: center;
@@ -798,105 +1252,8 @@ ${JSON.stringify(data)}
     text-align: center;
     font-size: 0.65rem;
     color: var(--dim);
-    margin-top: 6px;
+    margin-top: 20px;
     letter-spacing: 1px;
-  }
-
-  .top-crew {
-    display: flex;
-    justify-content: center;
-    gap: 40px;
-    margin: 30px 0;
-    flex-wrap: wrap;
-  }
-
-  .top-card {
-    text-align: center;
-    padding: 20px 28px;
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    background: var(--panel);
-    backdrop-filter: blur(10px);
-    position: relative;
-    overflow: hidden;
-    min-width: 160px;
-    opacity: 0;
-    animation: scaleIn 0.8s ease forwards;
-  }
-
-  .top-card.gold {
-    border-color: rgba(255, 215, 0, 0.4);
-    box-shadow: 0 0 30px rgba(255, 215, 0, 0.1), inset 0 0 30px rgba(255, 215, 0, 0.03);
-  }
-
-  .top-card.danger {
-    border-color: rgba(255, 51, 85, 0.4);
-    box-shadow: 0 0 30px rgba(255, 51, 85, 0.1), inset 0 0 30px rgba(255, 51, 85, 0.03);
-  }
-
-  .top-card.ruby {
-    border-color: rgba(224, 17, 95, 0.4);
-    box-shadow: 0 0 30px rgba(224, 17, 95, 0.1), inset 0 0 30px rgba(224, 17, 95, 0.03);
-  }
-
-  .top-card .card-label {
-    font-family: 'Orbitron', sans-serif;
-    font-size: 0.55rem;
-    letter-spacing: 3px;
-    text-transform: uppercase;
-    color: var(--dim);
-    margin-bottom: 10px;
-  }
-
-  .top-card .card-emoji {
-    font-size: 2.5rem;
-    margin-bottom: 8px;
-    filter: drop-shadow(0 0 10px rgba(255,255,255,0.3));
-  }
-
-  .top-card .card-name { font-size: 0.9rem; color: #fff; margin-bottom: 4px; }
-
-  .top-card .card-score {
-    font-family: 'Orbitron', sans-serif;
-    font-size: 1.8rem;
-    font-weight: 900;
-  }
-
-  .top-card.gold .card-score { color: var(--gold); text-shadow: 0 0 20px rgba(255, 215, 0, 0.5); }
-  .top-card.danger .card-score { color: var(--red); text-shadow: 0 0 20px rgba(255, 51, 85, 0.5); }
-  .top-card.ruby .card-score { color: var(--ruby); text-shadow: 0 0 20px rgba(224, 17, 95, 0.5); }
-
-  .radar-container {
-    position: fixed;
-    top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    width: 800px; height: 800px;
-    pointer-events: none;
-    z-index: 0;
-    opacity: 0.04;
-  }
-
-  .radar-ring {
-    position: absolute;
-    border: 1px solid var(--cyan);
-    border-radius: 50%;
-    top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-  }
-
-  .radar-ring:nth-child(1) { width: 200px; height: 200px; }
-  .radar-ring:nth-child(2) { width: 400px; height: 400px; }
-  .radar-ring:nth-child(3) { width: 600px; height: 600px; }
-  .radar-ring:nth-child(4) { width: 800px; height: 800px; }
-
-  .radar-sweep {
-    position: absolute;
-    top: 50%; left: 50%;
-    width: 400px; height: 2px;
-    background: linear-gradient(90deg, var(--cyan), transparent);
-    transform-origin: left center;
-    animation: radarSweep 4s linear 1 forwards;
-    opacity: 0.5;
   }
 
   @keyframes gradientShift {
@@ -911,39 +1268,23 @@ ${JSON.stringify(data)}
 
   @keyframes slideIn { to { opacity: 1; transform: translateX(0); } }
   @keyframes fillBar { to { width: var(--fill-width); } }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-  @keyframes shimmer {
-    0% { left: -100%; opacity: 1; }
-    80% { opacity: 1; }
-    100% { left: 200%; opacity: 0; }
-  }
-
-  @keyframes fadeIn { to { opacity: 1; } }
-
-  @keyframes scaleIn {
-    from { opacity: 0; transform: scale(0.8); }
-    to { opacity: 1; transform: scale(1); }
-  }
-
-  @keyframes radarSweep {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
-  }
-
-  @media (max-width: 700px) {
+  @media (max-width: 800px) {
+    .command-card {
+      grid-template-columns: 40px 1fr;
+      gap: 12px;
+    }
+    .command-desc { display: none; }
     .bar-row {
-      grid-template-columns: 120px 1fr 50px;
+      grid-template-columns: 100px 1fr 50px;
       gap: 8px;
     }
-    .crew-name { font-size: 0.75rem; }
     .log-entry {
       grid-template-columns: 1fr;
       gap: 4px;
     }
-    .log-entry .log-date { display: inline; }
-    .top-crew { gap: 16px; }
-    .top-card { min-width: 130px; padding: 16px 20px; }
-    .tab-btn { padding: 10px 16px; font-size: 0.65rem; }
+    .nav-btn { padding: 8px 10px; font-size: 0.6rem; }
   }
 </style>
 </head>
@@ -951,94 +1292,109 @@ ${JSON.stringify(data)}
 
 <canvas id="starfield"></canvas>
 
-<div class="radar-container">
-  <div class="radar-ring"></div>
-  <div class="radar-ring"></div>
-  <div class="radar-ring"></div>
-  <div class="radar-ring"></div>
-  <div class="radar-sweep"></div>
-</div>
-
 <div class="container">
   <header class="header">
     <div class="ship-name">USS Kittyprise</div>
-    <div class="subtitle">Credits & Currency System v3.0</div>
+    <div class="subtitle">Official Ship's Wiki & Records</div>
     <div class="system-status">
       <span class="status-dot"></span>
-      <span>System Online — All Crew Monitored</span>
+      <span>All Systems Operational</span>
     </div>
   </header>
 
-  <nav class="tab-nav">
-    <button class="tab-btn active" data-tab="credit">Social Credit</button>
-    <button class="tab-btn rubies-tab" data-tab="rubies">💎 Rubies</button>
+  <nav class="main-nav">
+    <button class="nav-btn active" data-section="credit">📊 Credit</button>
+    <button class="nav-btn" data-section="rubies">💎 Rubies</button>
+    <button class="nav-btn" data-section="command">👑 Command</button>
+    <button class="nav-btn" data-section="treaties">📜 Treaties</button>
+    <button class="nav-btn" data-section="rules">⚖️ Rules</button>
+    <button class="nav-btn" data-section="bills">🏛️ Bills</button>
+    <button class="nav-btn" data-section="lore">📖 Lore</button>
   </nav>
 
-  <!-- Social Credit Tab -->
-  <div class="tab-content active" id="credit-tab">
-    <div class="top-crew" id="top-crew"></div>
-
-    <section class="chart-section">
-      <div class="section-title">Crew Credit Standings</div>
-      <div class="bar-chart" id="bar-chart"></div>
-    </section>
-
-    <section class="changelog">
-      <div class="section-title">Activity Log</div>
-      <div id="changelog"></div>
-    </section>
+  <!-- CREDIT SECTION -->
+  <div class="section active" id="credit">
+    <div class="top-crew" id="credit-top"></div>
+    <div class="panel">
+      <div class="section-title">Social Credit Standings</div>
+      <div class="bar-chart" id="credit-chart"></div>
+    </div>
+    <div class="panel">
+      <div class="section-title">Credit Activity Log</div>
+      <div class="changelog-list" id="credit-log"></div>
+    </div>
   </div>
 
-  <!-- Rubies Tab -->
-  <div class="tab-content" id="rubies-tab">
-    <div class="top-crew" id="top-rubies"></div>
-
-    <section class="chart-section rubies-section">
-      <div class="section-title rubies-title">💎 Rubies Balances</div>
+  <!-- RUBIES SECTION -->
+  <div class="section" id="rubies">
+    <div class="top-crew" id="rubies-top"></div>
+    <div class="panel" style="border-color: rgba(224, 17, 95, 0.25);">
+      <div class="section-title" style="color: var(--ruby);">💎 Rubies Balances</div>
       <div class="bar-chart" id="rubies-chart"></div>
-    </section>
+    </div>
+    <div class="panel" style="border-color: rgba(224, 17, 95, 0.25);">
+      <div class="section-title" style="color: var(--ruby);">💎 Rubies Transactions</div>
+      <div class="changelog-list" id="rubies-log"></div>
+    </div>
+  </div>
 
-    <section class="changelog rubies-log">
-      <div class="section-title rubies-title">💎 Rubies Transaction Log</div>
-      <div id="rubies-changelog"></div>
-    </section>
+  <!-- COMMAND SECTION -->
+  <div class="section" id="command">
+    <div class="panel" style="border-color: rgba(255, 215, 0, 0.25);">
+      <div class="section-title" style="color: var(--gold);">👑 Chain of Command</div>
+      <div class="command-grid" id="command-grid"></div>
+    </div>
+  </div>
+
+  <!-- TREATIES SECTION -->
+  <div class="section" id="treaties">
+    <div class="panel" style="border-color: rgba(155, 89, 182, 0.25);">
+      <div class="section-title" style="color: var(--purple);">📜 Active Treaties</div>
+      <div id="treaties-list"></div>
+    </div>
+  </div>
+
+  <!-- RULES SECTION -->
+  <div class="section" id="rules">
+    <div class="panel" style="border-color: rgba(255, 51, 85, 0.25);">
+      <div class="section-title" style="color: var(--red);">⚖️ Ship's Rules</div>
+      <div id="rules-list"></div>
+    </div>
+  </div>
+
+  <!-- BILLS SECTION -->
+  <div class="section" id="bills">
+    <div class="panel" style="border-color: rgba(0, 255, 136, 0.25);">
+      <div class="section-title" style="color: var(--green);">🏛️ Bills & Legislation</div>
+      <div id="bills-list"></div>
+    </div>
+  </div>
+
+  <!-- LORE SECTION -->
+  <div class="section" id="lore">
+    <div class="panel" style="border-color: rgba(243, 156, 18, 0.25);">
+      <div class="section-title" style="color: var(--orange);">📖 Ship's Lore</div>
+      <div id="lore-list"></div>
+    </div>
   </div>
 
   <div class="last-updated" id="last-updated"></div>
 
   <footer class="footer">
-    <a href="https://chaoscat.win" target="_blank">chaoscat.win</a> — meow
+    <a href="https://chaoscat.win" target="_blank">chaoscat.win</a> — meow 🐱
   </footer>
 </div>
 
 <script>
-  const data = JSON.parse(document.getElementById('score-data').textContent);
-  const scores = [...data.scores].sort((a, b) => b.score - a.score);
-  const maxScore = Math.max(...scores.map(s => s.score));
-  const minScore = Math.min(...scores.map(s => s.score));
+  // Load data
+  const scoreData = JSON.parse(document.getElementById('score-data').textContent);
+  const chainData = JSON.parse(document.getElementById('chain-data').textContent);
+  const treatiesData = JSON.parse(document.getElementById('treaties-data').textContent);
+  const rulesData = JSON.parse(document.getElementById('rules-data').textContent);
+  const billsData = JSON.parse(document.getElementById('bills-data').textContent);
+  const loreData = JSON.parse(document.getElementById('lore-data').textContent);
 
-  // Rubies data
-  const rubies = [...(data.rubies || [])].sort((a, b) => b.balance - a.balance);
-  const maxRubies = Math.max(...rubies.map(r => r.balance), 1);
-  const minRubies = Math.min(...rubies.map(r => r.balance));
-
-  // Get member info (emoji, rank) from scores
-  function getMemberInfo(name) {
-    const member = data.scores.find(s => s.name.toLowerCase() === name.toLowerCase());
-    return member || { emoji: '👤', rank: 'Civilian' };
-  }
-
-  // Tab switching
-  document.querySelectorAll('.tab-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-      btn.classList.add('active');
-      document.getElementById(btn.dataset.tab + '-tab').classList.add('active');
-    });
-  });
-
-  // Starfield — static render (no animation loop)
+  // Starfield
   const canvas = document.getElementById('starfield');
   const ctx = canvas.getContext('2d');
 
@@ -1056,11 +1412,21 @@ ${JSON.stringify(data)}
       ctx.fill();
     }
   }
-
   drawStars();
   window.addEventListener('resize', drawStars);
 
-  function getClass(score) {
+  // Navigation
+  document.querySelectorAll('.nav-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById(btn.dataset.section).classList.add('active');
+    });
+  });
+
+  // Helper functions
+  function getScoreClass(score) {
     if (score >= 110) return 'high';
     if (score > 100) return 'good';
     if (score === 100) return 'neutral';
@@ -1069,57 +1435,46 @@ ${JSON.stringify(data)}
 
   function getRubyClass(balance) {
     if (balance >= 100) return 'ruby-high';
-    if (balance > 0) return 'ruby-good';
-    if (balance === 0) return 'ruby-low';
-    return 'ruby-negative';
+    return 'ruby';
   }
 
-  // Top/Bottom cards for Credit
-  const topCrew = document.getElementById('top-crew');
+  function getMemberInfo(name) {
+    return scoreData.scores.find(s => s.name.toLowerCase() === name.toLowerCase()) || { emoji: '👤', rank: 'Civilian' };
+  }
+
+  // ═══ CREDIT SECTION ═══
+  const scores = [...scoreData.scores].sort((a, b) => b.score - a.score);
+  const maxScore = Math.max(...scores.map(s => s.score)) + 10;
+
+  // Top cards
+  const creditTop = document.getElementById('credit-top');
   const highest = scores[0];
   const lowest = scores[scores.length - 1];
+  
+  creditTop.innerHTML = \`
+    <div class="top-card gold">
+      <div class="card-label">★ Highest Credit</div>
+      <div class="card-emoji">\${highest.emoji}</div>
+      <div class="card-name">\${highest.name}</div>
+      <div class="card-score">\${highest.score}</div>
+    </div>
+    \${lowest.score < highest.score ? \`
+    <div class="top-card danger">
+      <div class="card-label">⚠ Lowest Credit</div>
+      <div class="card-emoji">\${lowest.emoji}</div>
+      <div class="card-name">\${lowest.name}</div>
+      <div class="card-score">\${lowest.score}</div>
+    </div>\` : ''}
+  \`;
 
-  function makeCard(member, label, style, delay, valueLabel = 'score') {
-    const card = document.createElement('div');
-    card.className = \`top-card \${style}\`;
-    card.style.animationDelay = \`\${delay}s\`;
-    const value = valueLabel === 'balance' ? member.balance : member.score;
-    const info = valueLabel === 'balance' ? getMemberInfo(member.name) : member;
-    card.innerHTML = \`
-      <div class="card-label">\${label}</div>
-      <div class="card-emoji">\${info.emoji}</div>
-      <div class="card-name">\${member.name}</div>
-      <div class="card-score">\${value}</div>
-    \`;
-    return card;
-  }
-
-  topCrew.appendChild(makeCard(highest, '★ Highest Credit', 'gold', 0.2));
-  if (lowest.score < highest.score) {
-    topCrew.appendChild(makeCard(lowest, '⚠ Lowest Credit', 'danger', 0.4));
-  }
-
-  // Top/Bottom cards for Rubies
-  const topRubies = document.getElementById('top-rubies');
-  if (rubies.length > 0) {
-    const richest = rubies[0];
-    const poorest = rubies[rubies.length - 1];
-    topRubies.appendChild(makeCard(richest, '💎 Most Rubies', 'ruby', 0.2, 'balance'));
-    if (poorest.balance < richest.balance) {
-      topRubies.appendChild(makeCard(poorest, '💸 Least Rubies', 'danger', 0.4, 'balance'));
-    }
-  }
-
-  // Bar chart for Credit
-  const barChart = document.getElementById('bar-chart');
-  const scaleMax = maxScore + 10;
-
+  // Bar chart
+  const creditChart = document.getElementById('credit-chart');
   scores.forEach((member, i) => {
-    const pct = ((member.score / scaleMax) * 100).toFixed(1);
-    const cls = getClass(member.score);
+    const pct = ((member.score / maxScore) * 100).toFixed(1);
+    const cls = getScoreClass(member.score);
     const row = document.createElement('div');
     row.className = 'bar-row';
-    row.style.animationDelay = \`\${i * 0.08 + 0.3}s\`;
+    row.style.animationDelay = \`\${i * 0.08}s\`;
     row.innerHTML = \`
       <div class="crew-info">
         <span class="crew-emoji">\${member.emoji}</span>
@@ -1129,27 +1484,65 @@ ${JSON.stringify(data)}
         </div>
       </div>
       <div class="bar-track">
-        <div class="bar-fill bar-\${cls}" style="--fill-width: \${pct}%; animation-delay: \${i * 0.1 + 0.5}s"></div>
+        <div class="bar-fill bar-\${cls}" style="--fill-width: \${pct}%; animation-delay: \${i * 0.1}s"></div>
       </div>
       <div class="bar-score score-\${cls}">\${member.score}</div>
     \`;
-    barChart.appendChild(row);
+    creditChart.appendChild(row);
   });
 
-  // Bar chart for Rubies
-  const rubiesChart = document.getElementById('rubies-chart');
-  const rubiesScaleMax = Math.max(maxRubies + 10, 60);
+  // Changelog
+  const creditLog = document.getElementById('credit-log');
+  scoreData.changelog.forEach(entry => {
+    const isPositive = entry.change.startsWith('+');
+    creditLog.innerHTML += \`
+      <div class="log-entry">
+        <span class="log-date">\${entry.date}</span>
+        <span class="log-who">\${entry.who}</span>
+        <span class="log-change \${isPositive ? 'positive' : 'negative'}">\${entry.change}</span>
+        <span class="log-reason">\${entry.reason}</span>
+      </div>
+    \`;
+  });
 
+  // ═══ RUBIES SECTION ═══
+  const rubies = [...(scoreData.rubies || [])].sort((a, b) => b.balance - a.balance);
+  const maxRubies = Math.max(...rubies.map(r => r.balance), 60) + 10;
+
+  // Top cards
+  const rubiesTop = document.getElementById('rubies-top');
+  if (rubies.length > 0) {
+    const richest = rubies[0];
+    const poorest = rubies[rubies.length - 1];
+    const richInfo = getMemberInfo(richest.name);
+    const poorInfo = getMemberInfo(poorest.name);
+    
+    rubiesTop.innerHTML = \`
+      <div class="top-card ruby">
+        <div class="card-label">💎 Most Rubies</div>
+        <div class="card-emoji">\${richInfo.emoji}</div>
+        <div class="card-name">\${richest.name}</div>
+        <div class="card-score">\${richest.balance}</div>
+      </div>
+      \${poorest.balance < richest.balance ? \`
+      <div class="top-card danger">
+        <div class="card-label">💸 Least Rubies</div>
+        <div class="card-emoji">\${poorInfo.emoji}</div>
+        <div class="card-name">\${poorest.name}</div>
+        <div class="card-score">\${poorest.balance}</div>
+      </div>\` : ''}
+    \`;
+  }
+
+  // Bar chart
+  const rubiesChart = document.getElementById('rubies-chart');
   rubies.forEach((entry, i) => {
     const info = getMemberInfo(entry.name);
-    // Handle negative values by showing minimum bar
-    const pct = entry.balance >= 0 
-      ? ((entry.balance / rubiesScaleMax) * 100).toFixed(1)
-      : '2';
+    const pct = Math.max(((entry.balance / maxRubies) * 100), 2).toFixed(1);
     const cls = getRubyClass(entry.balance);
     const row = document.createElement('div');
     row.className = 'bar-row';
-    row.style.animationDelay = \`\${i * 0.08 + 0.3}s\`;
+    row.style.animationDelay = \`\${i * 0.08}s\`;
     row.innerHTML = \`
       <div class="crew-info">
         <span class="crew-emoji">\${info.emoji}</span>
@@ -1159,47 +1552,131 @@ ${JSON.stringify(data)}
         </div>
       </div>
       <div class="bar-track">
-        <div class="bar-fill bar-\${cls}" style="--fill-width: \${pct}%; animation-delay: \${i * 0.1 + 0.5}s"></div>
+        <div class="bar-fill bar-\${cls}" style="--fill-width: \${pct}%; animation-delay: \${i * 0.1}s"></div>
       </div>
       <div class="bar-score score-\${cls}">\${entry.balance}</div>
     \`;
     rubiesChart.appendChild(row);
   });
 
-  // Changelog for Credit
-  const changelogEl = document.getElementById('changelog');
-  data.changelog.forEach((entry, i) => {
+  // Rubies log
+  const rubiesLog = document.getElementById('rubies-log');
+  (scoreData.rubiesLog || []).forEach(entry => {
     const isPositive = entry.change.startsWith('+');
-    const row = document.createElement('div');
-    row.className = 'log-entry';
-    row.style.animationDelay = \`\${i * 0.1 + 0.8}s\`;
-    row.innerHTML = \`
-      <span class="log-date">\${entry.date}</span>
-      <span class="log-who">\${entry.who}</span>
-      <span class="log-change \${isPositive ? 'positive' : 'negative'}">\${entry.change}</span>
-      <span class="log-reason">\${entry.reason}</span>
+    rubiesLog.innerHTML += \`
+      <div class="log-entry">
+        <span class="log-date">\${entry.date}</span>
+        <span class="log-who">\${entry.who}</span>
+        <span class="log-change \${isPositive ? 'ruby-positive' : 'negative'}">\${entry.change}</span>
+        <span class="log-reason">\${entry.reason}</span>
+      </div>
     \`;
-    changelogEl.appendChild(row);
   });
 
-  // Changelog for Rubies
-  const rubiesLogEl = document.getElementById('rubies-changelog');
-  (data.rubiesLog || []).forEach((entry, i) => {
-    const isPositive = entry.change.startsWith('+');
-    const row = document.createElement('div');
-    row.className = 'log-entry';
-    row.style.animationDelay = \`\${i * 0.1 + 0.8}s\`;
-    row.innerHTML = \`
-      <span class="log-date">\${entry.date}</span>
-      <span class="log-who">\${entry.who}</span>
-      <span class="log-change \${isPositive ? 'ruby-positive' : 'ruby-negative'}">\${entry.change}</span>
-      <span class="log-reason">\${entry.reason}</span>
+  // ═══ COMMAND SECTION ═══
+  const commandGrid = document.getElementById('command-grid');
+  chainData.forEach((member, i) => {
+    const isTop = i < 4;
+    commandGrid.innerHTML += \`
+      <div class="command-card \${isTop ? 'highlight' : ''}">
+        <div class="command-emoji">\${member.emoji}</div>
+        <div class="command-info">
+          <h3>\${member.name}</h3>
+          <div class="command-rank">\${member.rank}</div>
+          <div class="command-title">\${member.title}</div>
+        </div>
+        <div class="command-desc">\${member.description}</div>
+      </div>
     \`;
-    rubiesLogEl.appendChild(row);
+  });
+
+  // ═══ TREATIES SECTION ═══
+  const treatiesList = document.getElementById('treaties-list');
+  treatiesData.forEach(treaty => {
+    treatiesList.innerHTML += \`
+      <div class="treaty-card">
+        <div class="treaty-header">
+          <div class="treaty-emoji">\${treaty.emoji}</div>
+          <div class="treaty-title">
+            <h3>\${treaty.name}</h3>
+            <div class="treaty-date">Signed: \${treaty.date}</div>
+          </div>
+        </div>
+        <div class="treaty-summary">\${treaty.summary}</div>
+        <div class="treaty-parties"><strong>Parties:</strong> \${treaty.parties.join(', ')}</div>
+        <ul class="treaty-terms">
+          \${treaty.terms.map(t => \`<li>\${t}</li>\`).join('')}
+        </ul>
+      </div>
+    \`;
+  });
+
+  // ═══ RULES SECTION ═══
+  const rulesList = document.getElementById('rules-list');
+  rulesData.forEach(rule => {
+    rulesList.innerHTML += \`
+      <div class="rule-card">
+        <div class="rule-header">
+          <span class="rule-number">\${rule.number}</span>
+          <span class="rule-emoji">\${rule.emoji}</span>
+          <span class="rule-name">\${rule.name}</span>
+        </div>
+        <div class="rule-desc">\${rule.description}</div>
+        <div class="rule-meta">
+          <span><strong>Enforced by:</strong> \${rule.enforcedBy}</span>
+          <span><strong>Penalty:</strong> \${rule.penalty}</span>
+        </div>
+      </div>
+    \`;
+  });
+
+  // ═══ BILLS SECTION ═══
+  const billsList = document.getElementById('bills-list');
+  billsData.forEach(bill => {
+    const statusClass = bill.status.toLowerCase();
+    billsList.innerHTML += \`
+      <div class="bill-card">
+        <div class="bill-header">
+          <div class="bill-title-group">
+            <span class="bill-number">\${bill.number}</span>
+            <span class="bill-name">\${bill.name}</span>
+          </div>
+          <span class="bill-status \${statusClass}">\${bill.status}</span>
+        </div>
+        <div class="bill-summary">\${bill.summary}</div>
+        <div class="bill-meta">
+          <span><strong>Date:</strong> \${bill.date}</span>
+          <span><strong>Proposed by:</strong> \${bill.proposedBy}</span>
+          <span class="bill-votes">
+            <span class="vote-for">✓ \${bill.votes.for}</span> /
+            <span class="vote-against">✗ \${bill.votes.against}</span> /
+            <span class="vote-abstain">○ \${bill.votes.abstain}</span>
+          </span>
+        </div>
+      </div>
+    \`;
+  });
+
+  // ═══ LORE SECTION ═══
+  const loreList = document.getElementById('lore-list');
+  loreData.forEach(entry => {
+    loreList.innerHTML += \`
+      <div class="lore-card">
+        <div class="lore-header">
+          <div class="lore-emoji">\${entry.emoji}</div>
+          <div class="lore-title">
+            <h3>\${entry.title}</h3>
+            <div class="lore-category">\${entry.category}</div>
+            <div class="lore-date">\${entry.date}</div>
+          </div>
+        </div>
+        <div class="lore-desc">\${entry.description}</div>
+      </div>
+    \`;
   });
 
   // Last updated
-  const updated = new Date(data.lastUpdated);
+  const updated = new Date(scoreData.lastUpdated);
   document.getElementById('last-updated').textContent =
     'Last updated: ' + updated.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) +
     ' at ' + updated.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', timeZoneName: 'short' });
@@ -1214,12 +1691,10 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
 
-    // CORS preflight
     if (request.method === "OPTIONS") {
       return new Response(null, { status: 204, headers: corsHeaders() });
     }
 
-    // API routes
     if (url.pathname === "/api/scores") {
       if (request.method === "GET") {
         return handleGetScores(env.SCORES_KV);
@@ -1230,7 +1705,6 @@ export default {
       return new Response("Method Not Allowed", { status: 405 });
     }
 
-    // Serve the page for everything else
     if (request.method === "GET") {
       return handlePage(env.SCORES_KV);
     }

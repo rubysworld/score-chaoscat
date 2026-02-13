@@ -3,7 +3,8 @@ main = "src/index.js"
 compatibility_date = "2024-01-01"
 
 routes = [
-  { pattern = "score.chaoscat.win/*", zone_id = "584f107fc4b1f949b4dc989b04567b41" }
+  { pattern = "score.chaoscat.win/*", zone_id = "584f107fc4b1f949b4dc989b04567b41" },
+  { pattern = "kittyprise.chaoscat.win/*", zone_id = "584f107fc4b1f949b4dc989b04567b41" }
 ]
 
 [[kv_namespaces]]
