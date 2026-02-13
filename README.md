@@ -1,106 +1,113 @@
-# USS Kittyprise — Social Credit System
+# USS Kittyprise Wiki
 
-A Cloudflare Worker that serves the crew social credit scoreboard with a KV-backed database and API for score updates.
+A Cloudflare Worker that serves the full USS Kittyprise Wiki including Social Credit scores, Rubies currency, Chain of Command, Treaties, Rules, Bills, and Lore.
 
-**Live:** https://score.chaoscat.win
+**Live:** https://kittyprise.chaoscat.win (also: https://score.chaoscat.win)
 
 ## Architecture
 
-- **Cloudflare Worker** serves the HTML page with scores injected from KV
-- **KV Namespace** (`SCORES_KV`) stores all score/changelog data as a single JSON blob
+- **Cloudflare Worker** serves the Wiki page with all data injected from KV
+- **KV Namespace** (`SCORES_KV`) stores:
+  - `score_data` — scores, changelog, rubies, rubiesLog
+  - `lore_data` — chain of command, treaties, rules, bills, lore entries
 - **API key** authentication for write operations
 
 ## Routes
 
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
-| GET | `/` | No | Serves the scoreboard HTML page |
-| GET | `/api/scores` | No | Returns current scores as JSON |
-| POST | `/api/scores` | Yes | Update scores (see API below) |
+| GET | `/` | No | Serves the Wiki HTML page |
+| GET | `/api/scores` | No | Returns scores/rubies data as JSON |
+| POST | `/api/scores` | Yes | Update scores/rubies |
+| GET | `/api/lore` | No | Returns lore data as JSON |
+| POST | `/api/lore` | Yes | Update lore (chain, treaties, rules, bills, lore) |
 
-## API Usage
+## CLI
+
+Use the `score.sh` CLI for all operations. See the skill docs at `~/ruby/skills/score-chaoscat/SKILL.md`.
+
+```bash
+# Score operations
+score.sh get
+score.sh update "Finny" 5 "Good behavior"
+score.sh update "pip" -10 "Purchase" --type rubies
+
+# Lore operations
+score.sh chain list
+score.sh chain add "Lieutenant" "NewCrew" "🌟" "New Title" "Description"
+score.sh treaty add "Peace Treaty" "2026-02-12" "Establishes peace"
+score.sh rule add "#5" "No Shouting" "Indoor voices only"
+score.sh bill add "Bill #3" "Nap Time Act" "2026-02-12" "Pending" "Asleep" "Summary"
+score.sh lore-entry add "Title" "2026-02-12" "Category" "Description"
+```
+
+## API Reference
+
+### Scores API (`/api/scores`)
 
 All POST requests require `Authorization: Bearer <API_KEY>` header.
 
-Config stored at `~/.config/score-chaoscat/config.json`.
+#### Actions
 
-### Update a score
+| Action | Required | Optional |
+|--------|----------|----------|
+| `update_score` | `name`, `delta` | `reason`, `type` (credit/rubies) |
+| `set_score` | `name`, `score` | `reason`, `type` |
+| `add_log` | `who`, `change`, `reason` | `date`, `type` |
+| `add_member` | `name` | `emoji`, `score`, `rank`, `rubies` |
+| `remove_member` | `name` | — |
+| `update_member` | `name` | `emoji`, `rank`, `newName` |
+| `bulk` | `operations` (array) | — |
+| `replace` | `data` (object) | — |
 
-```bash
-curl -X POST https://score.chaoscat.win/api/scores \
-  -H "Authorization: Bearer $API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{"action": "update_score", "name": "Finny", "delta": 5, "reason": "Being awesome"}'
-```
+### Lore API (`/api/lore`)
 
-### Set a score absolutely
+#### Chain of Command Actions
 
-```bash
-curl -X POST https://score.chaoscat.win/api/scores \
-  -H "Authorization: Bearer $API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{"action": "set_score", "name": "Finny", "score": 105, "reason": "Score correction"}'
-```
+| Action | Required | Optional |
+|--------|----------|----------|
+| `add_chain_member` | `name` | `rank`, `emoji`, `title`, `description`, `position` |
+| `update_chain_member` | `name` | `rank`, `emoji`, `title`, `description`, `newName`, `position` |
+| `remove_chain_member` | `name` | — |
 
-### Add a changelog entry (without changing scores)
+#### Treaty Actions
 
-```bash
-curl -X POST https://score.chaoscat.win/api/scores \
-  -H "Authorization: Bearer $API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{"action": "add_log", "who": "Finny", "change": "+5", "reason": "Being awesome"}'
-```
+| Action | Required | Optional |
+|--------|----------|----------|
+| `add_treaty` | `name` | `date`, `emoji`, `summary`, `parties`, `terms` |
+| `update_treaty` | `name` | `date`, `emoji`, `summary`, `parties`, `terms`, `newName` |
+| `remove_treaty` | `name` | — |
 
-### Add a new crew member
+#### Rule Actions
 
-```bash
-curl -X POST https://score.chaoscat.win/api/scores \
-  -H "Authorization: Bearer $API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{"action": "add_member", "name": "NewPerson", "emoji": "🌟", "score": 100, "rank": "Civilian"}'
-```
+| Action | Required | Optional |
+|--------|----------|----------|
+| `add_rule` | `number`, `name` | `emoji`, `description`, `enforcedBy`, `penalty` |
+| `update_rule` | `number` | `name`, `emoji`, `description`, `enforcedBy`, `penalty`, `newNumber` |
+| `remove_rule` | `number` | — |
 
-### Remove a crew member
+#### Bill Actions
 
-```bash
-curl -X POST https://score.chaoscat.win/api/scores \
-  -H "Authorization: Bearer $API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{"action": "remove_member", "name": "NewPerson"}'
-```
+| Action | Required | Optional |
+|--------|----------|----------|
+| `add_bill` | `number`, `name` | `date`, `status`, `emoji`, `proposedBy`, `summary`, `votes` |
+| `update_bill` | `number` | `name`, `date`, `status`, `emoji`, `proposedBy`, `summary`, `votes`, `newNumber` |
+| `remove_bill` | `number` | — |
 
-### Update member details (emoji, rank, name)
+#### Lore Entry Actions
 
-```bash
-curl -X POST https://score.chaoscat.win/api/scores \
-  -H "Authorization: Bearer $API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{"action": "update_member", "name": "Finny", "rank": "Admiral", "emoji": "🐠"}'
-```
+| Action | Required | Optional |
+|--------|----------|----------|
+| `add_lore` | `title` | `date`, `emoji`, `category`, `description` |
+| `update_lore` | `title` | `date`, `emoji`, `category`, `description`, `newTitle` |
+| `remove_lore` | `title` | — |
 
-### Bulk operations
+#### Bulk & Replace
 
-```bash
-curl -X POST https://score.chaoscat.win/api/scores \
-  -H "Authorization: Bearer $API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "action": "bulk",
-    "operations": [
-      {"action": "update_score", "name": "Finny", "delta": 3, "reason": "Great work"},
-      {"action": "update_score", "name": "pip", "delta": -1, "reason": "Annoying codeize again"}
-    ]
-  }'
-```
-
-### Full data replace (nuclear option)
-
-```bash
-curl -X POST https://score.chaoscat.win/api/scores \
-  -H "Authorization: Bearer $API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{"action": "replace", "data": {"scores": [...], "changelog": [...]}}'
-```
+| Action | Required |
+|--------|----------|
+| `bulk` | `operations` (array) |
+| `replace` | Any of: `chain`, `treaties`, `rules`, `bills`, `lore` |
 
 ## Development
 
@@ -112,11 +119,33 @@ npm run dev
 npm run deploy
 ```
 
-## Deployment Setup
+## Deployment
 
-1. `wrangler login` (OAuth to Cloudflare)
-2. Create KV namespace: `wrangler kv:namespace create SCORES_KV`
-3. Update `wrangler.toml` with the KV namespace ID
-4. Deploy: `wrangler deploy`
-5. Seed data: `wrangler kv:key put --binding SCORES_KV "score_data" "$(node scripts/seed.js)"`
-6. Set up DNS: CNAME `score` → `score-chaoscat.<account>.workers.dev` (or use Worker route)
+### Auto-deploy via GitHub Actions
+
+Push to `main` triggers automatic deployment via the `.github/workflows/deploy.yml` action.
+
+**Setup required:** Add `CLOUDFLARE_API_TOKEN` secret to the GitHub repo.
+
+1. Go to https://dash.cloudflare.com/profile/api-tokens
+2. Create token with permissions:
+   - Account: Read
+   - Workers Scripts: Edit
+3. Add as repo secret at: Settings → Secrets → Actions → New repository secret
+   - Name: `CLOUDFLARE_API_TOKEN`
+   - Value: (your token)
+
+### Manual Deployment
+
+```bash
+wrangler login
+wrangler deploy
+```
+
+## Data Migration
+
+On first request after deployment, the Worker will automatically:
+1. Initialize `score_data` in KV if empty (with default scores)
+2. Initialize `lore_data` in KV if empty (with default chain, treaties, rules, bills, lore)
+
+No manual seeding required.
