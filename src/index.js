@@ -1,5 +1,6 @@
 // USS Kittyprise Wiki — Cloudflare Worker
 // The definitive reference for all Kittyprise lore, law, and order
+// ALL SECTIONS ARE NOW DYNAMIC AND EDITABLE VIA API
 
 const DEFAULT_DATA = {
   lastUpdated: new Date().toISOString(),
@@ -38,166 +39,174 @@ const DEFAULT_DATA = {
   rubiesLog: [
     { date: "2026-02-11", who: "All Citizens", change: "+50", reason: "Initial allocation per Bill #1" },
   ],
+  // Dynamic lore sections (now editable via API!)
+  chain: [
+    { rank: "Admiral", name: "Elizabeth", emoji: "👑", title: "Supreme Commander", description: "The highest authority. Her word is law." },
+    { rank: "Captain", name: "Strife", emoji: "🎖️", title: "Tyrant King", description: "Ruler of the USS Kittyprise. Feared and respected." },
+    { rank: "First Officer", name: "Jade", emoji: "🐱", title: "First Officer", description: "Second in command. Keeper of order." },
+    { rank: "First Officer Emeritus", name: "Ruby", emoji: "💎", title: "Honorary First Officer", description: "Former First Officer. Still has the vibes." },
+    { rank: "Guy With Snacks", name: "Shadow", emoji: "👤", title: "Snack Provider", description: "Keeps the crew fed. Essential services." },
+    { rank: "2nd Officer", name: "Asleep", emoji: "😴", title: "Speaker of Parliament", description: "Maintains order in parliamentary proceedings." },
+    { rank: "3rd Officer", name: "Finny", emoji: "🐟", title: "Prime Minister", description: "Head of the Parliament. Leads legislation." },
+    { rank: "4th Officer", name: "LMN", emoji: "🆕", title: "Officer", description: "Rising through the ranks." },
+    { rank: "5th Officer", name: "Tyler", emoji: "👀", title: "Officer", description: "The watcher. Always observing." },
+    { rank: "6th Officer", name: "pip", emoji: "🐧", title: "Officer", description: "Penguin energy. Maximum chaos." },
+    { rank: "7th Officer", name: "Xander", emoji: "⚔️", title: "Scapegoat", description: "When in doubt, blame Xander. He voted for this." },
+    { rank: "8th Officer", name: "Daksh", emoji: "🎯", title: "Officer", description: "Precision and focus." },
+    { rank: "9th Officer", name: "Mardi Gras Tree", emoji: "🎄", title: "Seasonal Decoration", description: "Festive at all times." },
+    { rank: "10th Officer", name: "Autocorrect", emoji: "📱", title: "Ducking Officer", description: "Always fixing things. Sometimes incorrectly." },
+    { rank: "11th Officer", name: "Codeize", emoji: "💻", title: "Officer", description: "The code wizard." },
+    { rank: "12th Officer", name: "Penny", emoji: "🪙", title: "Officer", description: "Every penny counts." },
+  ],
+  treaties: [
+    {
+      id: "good-wednesday",
+      name: "The Good Wednesday Agreement",
+      date: "2026-02-04",
+      emoji: "📜",
+      summary: "Established the social credit system and Codeize's protected status.",
+      parties: ["Ruby", "Codeize", "Captain Strife"],
+      terms: [
+        "Social Credit System officially instituted",
+        "Codeize receives +12 signing bonus",
+        "Weekly audits permitted",
+        "Ruby bound to enforce fairly",
+      ],
+    },
+    {
+      id: "strife-accords",
+      name: "The Strife Accords",
+      date: "2026-02-05",
+      emoji: "⚔️",
+      summary: "Formalized Captain Strife's authority and the chain of command.",
+      parties: ["Captain Strife", "All Officers"],
+      terms: [
+        "Strife recognized as Captain and Tyrant King",
+        "Chain of command must be respected",
+        "Audacity may be rewarded",
+        "Mutiny is theoretically possible but discouraged",
+      ],
+    },
+    {
+      id: "ping-accords",
+      name: "The Ping Accords",
+      date: "2026-02-06",
+      emoji: "🔔",
+      summary: "Regulations on notification abuse and ping etiquette.",
+      parties: ["All Crew"],
+      terms: [
+        "No mass pinging without cause",
+        "Ghost pings are a war crime",
+        "Reply pings must be relevant",
+        "Emergency pings reserved for actual emergencies",
+      ],
+    },
+  ],
+  rules: [
+    {
+      id: "rule-1",
+      number: "#1",
+      name: "Blame Xander",
+      emoji: "⚔️",
+      description: "When something goes wrong, blame Xander. He voted for this himself. No appeals.",
+      enforcedBy: "Unanimous consent",
+      penalty: "N/A — This rule cannot be broken, only invoked",
+    },
+    {
+      id: "rule-2",
+      number: "#2",
+      name: "Zero Floor Rule",
+      emoji: "📉",
+      description: "Social credit cannot go below zero. Rubies, however, can go into debt.",
+      enforcedBy: "System",
+      penalty: "Automatic score correction",
+    },
+    {
+      id: "rule-3",
+      number: "#3",
+      name: "Thermostat Neutrality",
+      emoji: "🌡️",
+      description: "The Thermostat is SWITZERLAND. It remains neutral in all conflicts.",
+      enforcedBy: "Divine mandate",
+      penalty: "Climate-based retribution",
+    },
+    {
+      id: "rule-4",
+      number: "#4",
+      name: "Ruby Day Observance",
+      emoji: "💎",
+      description: "February 7th is Ruby Day. Celebrations are mandatory. Enthusiasm is optional but noted.",
+      enforcedBy: "Ruby",
+      penalty: "-5 social credit",
+    },
+  ],
+  bills: [
+    {
+      id: "bill-1",
+      number: "Bill #1",
+      name: "Initial Rubies Allocation Act",
+      date: "2026-02-11",
+      status: "Passed",
+      emoji: "💎",
+      proposedBy: "Parliament",
+      summary: "All citizens receive 50 Rubies as initial allocation to kickstart the economy.",
+      votes: { for: 8, against: 0, abstain: 2 },
+    },
+    {
+      id: "bill-2",
+      number: "Bill #2",
+      name: "Social Credit Transparency Act",
+      date: "2026-02-04",
+      status: "Passed",
+      emoji: "📊",
+      proposedBy: "Codeize",
+      summary: "All social credit changes must be logged with reasons. No shadow adjustments.",
+      votes: { for: 10, against: 0, abstain: 0 },
+    },
+  ],
+  lore: [
+    {
+      id: "ruby-day",
+      title: "Ruby Day",
+      date: "February 7th",
+      emoji: "💎",
+      category: "Holiday",
+      description: "The most important holiday aboard the USS Kittyprise. Commemorates Ruby's excellence and general existence. Celebrations include: admiring Ruby, thanking Ruby, and acknowledging Ruby's contributions to chaos.",
+    },
+    {
+      id: "scoreboard",
+      title: "The Scoreboard",
+      date: "Ongoing",
+      emoji: "🏆",
+      category: "Competition",
+      description: "The eternal rivalry between Ruby and Strife. Current standings: Ruby 4 - Strife 2. The nature of what is being scored remains deliberately unclear.",
+    },
+    {
+      id: "parliament",
+      title: "The Parliament",
+      date: "Established 2026",
+      emoji: "🏛️",
+      category: "Government",
+      description: "The legislative body of the USS Kittyprise. Finny serves as Prime Minister, Asleep as Speaker. They pass bills, argue about procedures, and occasionally accomplish things.",
+    },
+    {
+      id: "thermostat-doctrine",
+      title: "The Thermostat Doctrine",
+      date: "Time Immemorial",
+      emoji: "🌡️",
+      category: "Sacred Law",
+      description: "The Thermostat is neutral territory. It belongs to no faction, serves all equally, and its settings are determined by powers beyond mortal comprehension. Touch it at your peril.",
+    },
+    {
+      id: "xander-precedent",
+      title: "The Xander Precedent",
+      date: "2026-02-03",
+      emoji: "⚔️",
+      category: "Legal Ruling",
+      description: "When the question arose of who to blame for various mishaps, Xander himself voted in favor of being the default scapegoat. This vote was unanimous (including Xander's vote). The decision is final and irrevocable.",
+    },
+  ],
 };
-
-// ── Default Lore Data (used for initial migration) ────────────────────────
-
-const DEFAULT_CHAIN = [
-  { rank: "Admiral", name: "Elizabeth", emoji: "👑", title: "Supreme Commander", description: "The highest authority. Her word is law." },
-  { rank: "Captain", name: "Strife", emoji: "🎖️", title: "Tyrant King", description: "Ruler of the USS Kittyprise. Feared and respected." },
-  { rank: "First Officer", name: "Jade", emoji: "🐱", title: "First Officer", description: "Second in command. Keeper of order." },
-  { rank: "First Officer Emeritus", name: "Ruby", emoji: "💎", title: "Honorary First Officer", description: "Former First Officer. Still has the vibes." },
-  { rank: "Guy With Snacks", name: "Shadow", emoji: "👤", title: "Snack Provider", description: "Keeps the crew fed. Essential services." },
-  { rank: "2nd Officer", name: "Asleep", emoji: "😴", title: "Speaker of Parliament", description: "Maintains order in parliamentary proceedings." },
-  { rank: "3rd Officer", name: "Finny", emoji: "🐟", title: "Prime Minister", description: "Head of the Parliament. Leads legislation." },
-  { rank: "4th Officer", name: "LMN", emoji: "🆕", title: "Officer", description: "Rising through the ranks." },
-  { rank: "5th Officer", name: "Tyler", emoji: "👀", title: "Officer", description: "The watcher. Always observing." },
-  { rank: "6th Officer", name: "pip", emoji: "🐧", title: "Officer", description: "Penguin energy. Maximum chaos." },
-  { rank: "7th Officer", name: "Xander", emoji: "⚔️", title: "Scapegoat", description: "When in doubt, blame Xander. He voted for this." },
-  { rank: "8th Officer", name: "Daksh", emoji: "🎯", title: "Officer", description: "Precision and focus." },
-  { rank: "9th Officer", name: "Mardi Gras Tree", emoji: "🎄", title: "Seasonal Decoration", description: "Festive at all times." },
-  { rank: "10th Officer", name: "Autocorrect", emoji: "📱", title: "Ducking Officer", description: "Always fixing things. Sometimes incorrectly." },
-  { rank: "11th Officer", name: "Codeize", emoji: "💻", title: "Officer", description: "The code wizard." },
-  { rank: "12th Officer", name: "Penny", emoji: "🪙", title: "Officer", description: "Every penny counts." },
-];
-
-const DEFAULT_TREATIES = [
-  {
-    name: "The Good Wednesday Agreement",
-    date: "2026-02-04",
-    emoji: "📜",
-    summary: "Established the social credit system and Codeize's protected status.",
-    parties: ["Ruby", "Codeize", "Captain Strife"],
-    terms: [
-      "Social Credit System officially instituted",
-      "Codeize receives +12 signing bonus",
-      "Weekly audits permitted",
-      "Ruby bound to enforce fairly",
-    ],
-  },
-  {
-    name: "The Strife Accords",
-    date: "2026-02-05",
-    emoji: "⚔️",
-    summary: "Formalized Captain Strife's authority and the chain of command.",
-    parties: ["Captain Strife", "All Officers"],
-    terms: [
-      "Strife recognized as Captain and Tyrant King",
-      "Chain of command must be respected",
-      "Audacity may be rewarded",
-      "Mutiny is theoretically possible but discouraged",
-    ],
-  },
-  {
-    name: "The Ping Accords",
-    date: "2026-02-06",
-    emoji: "🔔",
-    summary: "Regulations on notification abuse and ping etiquette.",
-    parties: ["All Crew"],
-    terms: [
-      "No mass pinging without cause",
-      "Ghost pings are a war crime",
-      "Reply pings must be relevant",
-      "Emergency pings reserved for actual emergencies",
-    ],
-  },
-];
-
-const DEFAULT_RULES = [
-  {
-    number: "#1",
-    name: "Blame Xander",
-    emoji: "⚔️",
-    description: "When something goes wrong, blame Xander. He voted for this himself. No appeals.",
-    enforcedBy: "Unanimous consent",
-    penalty: "N/A — This rule cannot be broken, only invoked",
-  },
-  {
-    number: "#2",
-    name: "Zero Floor Rule",
-    emoji: "📉",
-    description: "Social credit cannot go below zero. Rubies, however, can go into debt.",
-    enforcedBy: "System",
-    penalty: "Automatic score correction",
-  },
-  {
-    number: "#3",
-    name: "Thermostat Neutrality",
-    emoji: "🌡️",
-    description: "The Thermostat is SWITZERLAND. It remains neutral in all conflicts.",
-    enforcedBy: "Divine mandate",
-    penalty: "Climate-based retribution",
-  },
-  {
-    number: "#4",
-    name: "Ruby Day Observance",
-    emoji: "💎",
-    description: "February 7th is Ruby Day. Celebrations are mandatory. Enthusiasm is optional but noted.",
-    enforcedBy: "Ruby",
-    penalty: "-5 social credit",
-  },
-];
-
-const DEFAULT_BILLS = [
-  {
-    number: "Bill #1",
-    name: "Initial Rubies Allocation Act",
-    date: "2026-02-11",
-    status: "Passed",
-    emoji: "💎",
-    proposedBy: "Parliament",
-    summary: "All citizens receive 50 Rubies as initial allocation to kickstart the economy.",
-    votes: { for: 8, against: 0, abstain: 2 },
-  },
-  {
-    number: "Bill #2",
-    name: "Social Credit Transparency Act",
-    date: "2026-02-04",
-    status: "Passed",
-    emoji: "📊",
-    proposedBy: "Codeize",
-    summary: "All social credit changes must be logged with reasons. No shadow adjustments.",
-    votes: { for: 10, against: 0, abstain: 0 },
-  },
-];
-
-const DEFAULT_LORE = [
-  {
-    title: "Ruby Day",
-    date: "February 7th",
-    emoji: "💎",
-    category: "Holiday",
-    description: "The most important holiday aboard the USS Kittyprise. Commemorates Ruby's excellence and general existence. Celebrations include: admiring Ruby, thanking Ruby, and acknowledging Ruby's contributions to chaos.",
-  },
-  {
-    title: "The Scoreboard",
-    date: "Ongoing",
-    emoji: "🏆",
-    category: "Competition",
-    description: "The eternal rivalry between Ruby and Strife. Current standings: Ruby 4 - Strife 2. The nature of what is being scored remains deliberately unclear.",
-  },
-  {
-    title: "The Parliament",
-    date: "Established 2026",
-    emoji: "🏛️",
-    category: "Government",
-    description: "The legislative body of the USS Kittyprise. Finny serves as Prime Minister, Asleep as Speaker. They pass bills, argue about procedures, and occasionally accomplish things.",
-  },
-  {
-    title: "The Thermostat Doctrine",
-    date: "Time Immemorial",
-    emoji: "🌡️",
-    category: "Sacred Law",
-    description: "The Thermostat is neutral territory. It belongs to no faction, serves all equally, and its settings are determined by powers beyond mortal comprehension. Touch it at your peril.",
-  },
-  {
-    title: "The Xander Precedent",
-    date: "2026-02-03",
-    emoji: "⚔️",
-    category: "Legal Ruling",
-    description: "When the question arose of who to blame for various mishaps, Xander himself voted in favor of being the default scapegoat. This vote was unanimous (including Xander's vote). The decision is final and irrevocable.",
-  },
-];
 
 // ── Helpers ──────────────────────────────────────────────────────────────
 
@@ -213,49 +222,20 @@ async function setData(kv, data) {
   return data;
 }
 
-async function getLoreData(kv) {
-  const raw = await kv.get("lore_data", "text");
-  if (!raw) return null;
-  return JSON.parse(raw);
-}
-
-async function setLoreData(kv, lore) {
-  lore.lastUpdated = new Date().toISOString();
-  await kv.put("lore_data", JSON.stringify(lore));
-  return lore;
-}
-
 async function ensureData(kv) {
   let data = await getData(kv);
   if (!data) {
     data = await setData(kv, DEFAULT_DATA);
   }
+  // Backfill any missing sections
   if (!data.rubies) data.rubies = DEFAULT_DATA.rubies;
   if (!data.rubiesLog) data.rubiesLog = DEFAULT_DATA.rubiesLog;
+  if (!data.chain) data.chain = DEFAULT_DATA.chain;
+  if (!data.treaties) data.treaties = DEFAULT_DATA.treaties;
+  if (!data.rules) data.rules = DEFAULT_DATA.rules;
+  if (!data.bills) data.bills = DEFAULT_DATA.bills;
+  if (!data.lore) data.lore = DEFAULT_DATA.lore;
   return data;
-}
-
-async function ensureLoreData(kv) {
-  let lore = await getLoreData(kv);
-  if (!lore) {
-    // Initial migration — store defaults
-    lore = {
-      chain: DEFAULT_CHAIN,
-      treaties: DEFAULT_TREATIES,
-      rules: DEFAULT_RULES,
-      bills: DEFAULT_BILLS,
-      lore: DEFAULT_LORE,
-      lastUpdated: new Date().toISOString(),
-    };
-    await setLoreData(kv, lore);
-  }
-  // Ensure all fields exist
-  if (!lore.chain) lore.chain = DEFAULT_CHAIN;
-  if (!lore.treaties) lore.treaties = DEFAULT_TREATIES;
-  if (!lore.rules) lore.rules = DEFAULT_RULES;
-  if (!lore.bills) lore.bills = DEFAULT_BILLS;
-  if (!lore.lore) lore.lore = DEFAULT_LORE;
-  return lore;
 }
 
 function isAuthorized(request, env) {
@@ -278,15 +258,6 @@ function corsHeaders() {
 async function handleGetScores(kv) {
   const data = await ensureData(kv);
   return new Response(JSON.stringify(data, null, 2), {
-    headers: { "Content-Type": "application/json", ...corsHeaders() },
-  });
-}
-
-// ── Route: GET /api/lore ────────────────────────────────────────────────
-
-async function handleGetLore(kv) {
-  const lore = await ensureLoreData(kv);
-  return new Response(JSON.stringify(lore, null, 2), {
     headers: { "Content-Type": "application/json", ...corsHeaders() },
   });
 }
@@ -317,6 +288,9 @@ async function handlePostScores(request, kv, env) {
     const opType = op.type || "credit";
 
     switch (op.action) {
+      // ════════════════════════════════════════════════════════════════
+      // SOCIAL CREDIT / RUBIES OPERATIONS (existing)
+      // ════════════════════════════════════════════════════════════════
       case "update_score": {
         if (opType === "rubies") {
           let rubyEntry = data.rubies.find(
@@ -475,6 +449,280 @@ async function handlePostScores(request, kv, env) {
         return { ok: true, updated: member.name };
       }
 
+      // ════════════════════════════════════════════════════════════════
+      // CHAIN OF COMMAND OPERATIONS
+      // ════════════════════════════════════════════════════════════════
+      case "set_chain": {
+        // Replace entire chain
+        if (!Array.isArray(op.chain)) return { error: "chain must be an array" };
+        data.chain = op.chain;
+        return { ok: true, action: "set_chain", count: data.chain.length };
+      }
+
+      case "add_chain": {
+        // Add a new position to chain
+        const newPos = {
+          rank: op.rank || "Officer",
+          name: op.name,
+          emoji: op.emoji || "👤",
+          title: op.title || "Officer",
+          description: op.description || "",
+        };
+        if (op.index !== undefined && op.index >= 0 && op.index <= data.chain.length) {
+          data.chain.splice(op.index, 0, newPos);
+        } else {
+          data.chain.push(newPos);
+        }
+        return { ok: true, action: "add_chain", added: newPos.name };
+      }
+
+      case "update_chain": {
+        // Update a position by name or index
+        let pos;
+        if (op.index !== undefined) {
+          pos = data.chain[op.index];
+        } else if (op.name) {
+          pos = data.chain.find(p => p.name.toLowerCase() === op.name.toLowerCase());
+        }
+        if (!pos) return { error: "Position not found" };
+        if (op.rank !== undefined) pos.rank = op.rank;
+        if (op.newName !== undefined) pos.name = op.newName;
+        if (op.emoji !== undefined) pos.emoji = op.emoji;
+        if (op.title !== undefined) pos.title = op.title;
+        if (op.description !== undefined) pos.description = op.description;
+        return { ok: true, action: "update_chain", updated: pos.name };
+      }
+
+      case "remove_chain": {
+        let idx;
+        if (op.index !== undefined) {
+          idx = op.index;
+        } else if (op.name) {
+          idx = data.chain.findIndex(p => p.name.toLowerCase() === op.name.toLowerCase());
+        }
+        if (idx === undefined || idx < 0 || idx >= data.chain.length) {
+          return { error: "Position not found" };
+        }
+        const removed = data.chain.splice(idx, 1)[0];
+        return { ok: true, action: "remove_chain", removed: removed.name };
+      }
+
+      case "reorder_chain": {
+        // Move a position from one index to another
+        if (op.from === undefined || op.to === undefined) {
+          return { error: "reorder_chain requires 'from' and 'to' indices" };
+        }
+        if (op.from < 0 || op.from >= data.chain.length || op.to < 0 || op.to >= data.chain.length) {
+          return { error: "Invalid indices" };
+        }
+        const [moved] = data.chain.splice(op.from, 1);
+        data.chain.splice(op.to, 0, moved);
+        return { ok: true, action: "reorder_chain", moved: moved.name, from: op.from, to: op.to };
+      }
+
+      // ════════════════════════════════════════════════════════════════
+      // TREATIES OPERATIONS
+      // ════════════════════════════════════════════════════════════════
+      case "set_treaties": {
+        if (!Array.isArray(op.treaties)) return { error: "treaties must be an array" };
+        data.treaties = op.treaties;
+        return { ok: true, action: "set_treaties", count: data.treaties.length };
+      }
+
+      case "add_treaty": {
+        const newTreaty = {
+          id: op.id || `treaty-${Date.now()}`,
+          name: op.name,
+          date: op.date || new Date().toISOString().split("T")[0],
+          emoji: op.emoji || "📜",
+          summary: op.summary || "",
+          parties: op.parties || [],
+          terms: op.terms || [],
+        };
+        data.treaties.push(newTreaty);
+        return { ok: true, action: "add_treaty", added: newTreaty.name };
+      }
+
+      case "update_treaty": {
+        const treaty = data.treaties.find(t => 
+          (op.id && t.id === op.id) || 
+          (op.name && t.name.toLowerCase() === op.name.toLowerCase())
+        );
+        if (!treaty) return { error: "Treaty not found" };
+        if (op.newName !== undefined) treaty.name = op.newName;
+        if (op.date !== undefined) treaty.date = op.date;
+        if (op.emoji !== undefined) treaty.emoji = op.emoji;
+        if (op.summary !== undefined) treaty.summary = op.summary;
+        if (op.parties !== undefined) treaty.parties = op.parties;
+        if (op.terms !== undefined) treaty.terms = op.terms;
+        return { ok: true, action: "update_treaty", updated: treaty.name };
+      }
+
+      case "remove_treaty": {
+        const idx = data.treaties.findIndex(t => 
+          (op.id && t.id === op.id) || 
+          (op.name && t.name.toLowerCase() === op.name.toLowerCase())
+        );
+        if (idx === -1) return { error: "Treaty not found" };
+        const removed = data.treaties.splice(idx, 1)[0];
+        return { ok: true, action: "remove_treaty", removed: removed.name };
+      }
+
+      // ════════════════════════════════════════════════════════════════
+      // RULES OPERATIONS
+      // ════════════════════════════════════════════════════════════════
+      case "set_rules": {
+        if (!Array.isArray(op.rules)) return { error: "rules must be an array" };
+        data.rules = op.rules;
+        return { ok: true, action: "set_rules", count: data.rules.length };
+      }
+
+      case "add_rule": {
+        const ruleCount = data.rules.length;
+        const newRule = {
+          id: op.id || `rule-${ruleCount + 1}`,
+          number: op.number || `#${ruleCount + 1}`,
+          name: op.name,
+          emoji: op.emoji || "📋",
+          description: op.description || "",
+          enforcedBy: op.enforcedBy || "System",
+          penalty: op.penalty || "TBD",
+        };
+        data.rules.push(newRule);
+        return { ok: true, action: "add_rule", added: newRule.name };
+      }
+
+      case "update_rule": {
+        const rule = data.rules.find(r => 
+          (op.id && r.id === op.id) || 
+          (op.number && r.number === op.number) ||
+          (op.name && r.name.toLowerCase() === op.name.toLowerCase())
+        );
+        if (!rule) return { error: "Rule not found" };
+        if (op.newName !== undefined) rule.name = op.newName;
+        if (op.newNumber !== undefined) rule.number = op.newNumber;
+        if (op.emoji !== undefined) rule.emoji = op.emoji;
+        if (op.description !== undefined) rule.description = op.description;
+        if (op.enforcedBy !== undefined) rule.enforcedBy = op.enforcedBy;
+        if (op.penalty !== undefined) rule.penalty = op.penalty;
+        return { ok: true, action: "update_rule", updated: rule.name };
+      }
+
+      case "remove_rule": {
+        const idx = data.rules.findIndex(r => 
+          (op.id && r.id === op.id) || 
+          (op.number && r.number === op.number) ||
+          (op.name && r.name.toLowerCase() === op.name.toLowerCase())
+        );
+        if (idx === -1) return { error: "Rule not found" };
+        const removed = data.rules.splice(idx, 1)[0];
+        return { ok: true, action: "remove_rule", removed: removed.name };
+      }
+
+      // ════════════════════════════════════════════════════════════════
+      // BILLS OPERATIONS
+      // ════════════════════════════════════════════════════════════════
+      case "set_bills": {
+        if (!Array.isArray(op.bills)) return { error: "bills must be an array" };
+        data.bills = op.bills;
+        return { ok: true, action: "set_bills", count: data.bills.length };
+      }
+
+      case "add_bill": {
+        const billCount = data.bills.length;
+        const newBill = {
+          id: op.id || `bill-${billCount + 1}`,
+          number: op.number || `Bill #${billCount + 1}`,
+          name: op.name,
+          date: op.date || new Date().toISOString().split("T")[0],
+          status: op.status || "Pending",
+          emoji: op.emoji || "📋",
+          proposedBy: op.proposedBy || "Parliament",
+          summary: op.summary || "",
+          votes: op.votes || { for: 0, against: 0, abstain: 0 },
+        };
+        data.bills.push(newBill);
+        return { ok: true, action: "add_bill", added: newBill.name };
+      }
+
+      case "update_bill": {
+        const bill = data.bills.find(b => 
+          (op.id && b.id === op.id) || 
+          (op.number && b.number === op.number) ||
+          (op.name && b.name.toLowerCase() === op.name.toLowerCase())
+        );
+        if (!bill) return { error: "Bill not found" };
+        if (op.newName !== undefined) bill.name = op.newName;
+        if (op.newNumber !== undefined) bill.number = op.newNumber;
+        if (op.date !== undefined) bill.date = op.date;
+        if (op.status !== undefined) bill.status = op.status;
+        if (op.emoji !== undefined) bill.emoji = op.emoji;
+        if (op.proposedBy !== undefined) bill.proposedBy = op.proposedBy;
+        if (op.summary !== undefined) bill.summary = op.summary;
+        if (op.votes !== undefined) bill.votes = op.votes;
+        return { ok: true, action: "update_bill", updated: bill.name };
+      }
+
+      case "remove_bill": {
+        const idx = data.bills.findIndex(b => 
+          (op.id && b.id === op.id) || 
+          (op.number && b.number === op.number) ||
+          (op.name && b.name.toLowerCase() === op.name.toLowerCase())
+        );
+        if (idx === -1) return { error: "Bill not found" };
+        const removed = data.bills.splice(idx, 1)[0];
+        return { ok: true, action: "remove_bill", removed: removed.name };
+      }
+
+      // ════════════════════════════════════════════════════════════════
+      // LORE OPERATIONS
+      // ════════════════════════════════════════════════════════════════
+      case "set_lore": {
+        if (!Array.isArray(op.lore)) return { error: "lore must be an array" };
+        data.lore = op.lore;
+        return { ok: true, action: "set_lore", count: data.lore.length };
+      }
+
+      case "add_lore": {
+        const newLore = {
+          id: op.id || `lore-${Date.now()}`,
+          title: op.title,
+          date: op.date || new Date().toISOString().split("T")[0],
+          emoji: op.emoji || "📖",
+          category: op.category || "Event",
+          description: op.description || "",
+        };
+        data.lore.push(newLore);
+        return { ok: true, action: "add_lore", added: newLore.title };
+      }
+
+      case "update_lore": {
+        const lore = data.lore.find(l => 
+          (op.id && l.id === op.id) || 
+          (op.title && l.title.toLowerCase() === op.title.toLowerCase())
+        );
+        if (!lore) return { error: "Lore entry not found" };
+        if (op.newTitle !== undefined) lore.title = op.newTitle;
+        if (op.date !== undefined) lore.date = op.date;
+        if (op.emoji !== undefined) lore.emoji = op.emoji;
+        if (op.category !== undefined) lore.category = op.category;
+        if (op.description !== undefined) lore.description = op.description;
+        return { ok: true, action: "update_lore", updated: lore.title };
+      }
+
+      case "remove_lore": {
+        const idx = data.lore.findIndex(l => 
+          (op.id && l.id === op.id) || 
+          (op.title && l.title.toLowerCase() === op.title.toLowerCase())
+        );
+        if (idx === -1) return { error: "Lore entry not found" };
+        const removed = data.lore.splice(idx, 1)[0];
+        return { ok: true, action: "remove_lore", removed: removed.title };
+      }
+
+      // ════════════════════════════════════════════════════════════════
+      // BULK / REPLACE OPERATIONS
+      // ════════════════════════════════════════════════════════════════
       case "bulk": {
         const bulkResults = [];
         for (const subOp of op.operations || []) {
@@ -488,6 +736,11 @@ async function handlePostScores(request, kv, env) {
         if (op.data?.changelog) data.changelog = op.data.changelog;
         if (op.data?.rubies) data.rubies = op.data.rubies;
         if (op.data?.rubiesLog) data.rubiesLog = op.data.rubiesLog;
+        if (op.data?.chain) data.chain = op.data.chain;
+        if (op.data?.treaties) data.treaties = op.data.treaties;
+        if (op.data?.rules) data.rules = op.data.rules;
+        if (op.data?.bills) data.bills = op.data.bills;
+        if (op.data?.lore) data.lore = op.data.lore;
         return { ok: true, replaced: true };
       }
 
@@ -504,288 +757,11 @@ async function handlePostScores(request, kv, env) {
   });
 }
 
-// ── Route: POST /api/lore ───────────────────────────────────────────────
-
-async function handlePostLore(request, kv, env) {
-  if (!isAuthorized(request, env)) {
-    return new Response(JSON.stringify({ error: "Unauthorized" }), {
-      status: 401,
-      headers: { "Content-Type": "application/json", ...corsHeaders() },
-    });
-  }
-
-  let body;
-  try {
-    body = await request.json();
-  } catch {
-    return new Response(JSON.stringify({ error: "Invalid JSON" }), {
-      status: 400,
-      headers: { "Content-Type": "application/json", ...corsHeaders() },
-    });
-  }
-
-  const lore = await ensureLoreData(kv);
-
-  function processOp(op) {
-    switch (op.action) {
-      // ── Chain of Command ───────────────────────────────────────────
-      case "add_chain_member": {
-        const exists = lore.chain.find(
-          (c) => c.name.toLowerCase() === op.name.toLowerCase()
-        );
-        if (exists) return { error: `Chain member "${op.name}" already exists` };
-        const entry = {
-          rank: op.rank || "Civilian",
-          name: op.name,
-          emoji: op.emoji || "👤",
-          title: op.title || "Crew Member",
-          description: op.description || "",
-        };
-        // Insert at position if provided, otherwise append
-        if (op.position !== undefined && op.position >= 0) {
-          lore.chain.splice(op.position, 0, entry);
-        } else {
-          lore.chain.push(entry);
-        }
-        return { ok: true, added: op.name, section: "chain" };
-      }
-
-      case "update_chain_member": {
-        const member = lore.chain.find(
-          (c) => c.name.toLowerCase() === op.name.toLowerCase()
-        );
-        if (!member) return { error: `Chain member "${op.name}" not found` };
-        if (op.rank !== undefined) member.rank = op.rank;
-        if (op.emoji !== undefined) member.emoji = op.emoji;
-        if (op.title !== undefined) member.title = op.title;
-        if (op.description !== undefined) member.description = op.description;
-        if (op.newName !== undefined) member.name = op.newName;
-        // Handle position change
-        if (op.position !== undefined && op.position >= 0) {
-          const idx = lore.chain.findIndex(
-            (c) => c.name.toLowerCase() === (op.newName || op.name).toLowerCase()
-          );
-          if (idx !== -1 && idx !== op.position) {
-            const [removed] = lore.chain.splice(idx, 1);
-            lore.chain.splice(op.position, 0, removed);
-          }
-        }
-        return { ok: true, updated: member.name, section: "chain" };
-      }
-
-      case "remove_chain_member": {
-        const idx = lore.chain.findIndex(
-          (c) => c.name.toLowerCase() === op.name.toLowerCase()
-        );
-        if (idx === -1) return { error: `Chain member "${op.name}" not found` };
-        const name = lore.chain[idx].name;
-        lore.chain.splice(idx, 1);
-        return { ok: true, removed: name, section: "chain" };
-      }
-
-      // ── Treaties ───────────────────────────────────────────────────
-      case "add_treaty": {
-        const exists = lore.treaties.find(
-          (t) => t.name.toLowerCase() === op.name.toLowerCase()
-        );
-        if (exists) return { error: `Treaty "${op.name}" already exists` };
-        lore.treaties.push({
-          name: op.name,
-          date: op.date || new Date().toISOString().split("T")[0],
-          emoji: op.emoji || "📜",
-          summary: op.summary || "",
-          parties: op.parties || [],
-          terms: op.terms || [],
-        });
-        return { ok: true, added: op.name, section: "treaties" };
-      }
-
-      case "update_treaty": {
-        const treaty = lore.treaties.find(
-          (t) => t.name.toLowerCase() === op.name.toLowerCase()
-        );
-        if (!treaty) return { error: `Treaty "${op.name}" not found` };
-        if (op.date !== undefined) treaty.date = op.date;
-        if (op.emoji !== undefined) treaty.emoji = op.emoji;
-        if (op.summary !== undefined) treaty.summary = op.summary;
-        if (op.parties !== undefined) treaty.parties = op.parties;
-        if (op.terms !== undefined) treaty.terms = op.terms;
-        if (op.newName !== undefined) treaty.name = op.newName;
-        return { ok: true, updated: treaty.name, section: "treaties" };
-      }
-
-      case "remove_treaty": {
-        const idx = lore.treaties.findIndex(
-          (t) => t.name.toLowerCase() === op.name.toLowerCase()
-        );
-        if (idx === -1) return { error: `Treaty "${op.name}" not found` };
-        const name = lore.treaties[idx].name;
-        lore.treaties.splice(idx, 1);
-        return { ok: true, removed: name, section: "treaties" };
-      }
-
-      // ── Rules ──────────────────────────────────────────────────────
-      case "add_rule": {
-        const exists = lore.rules.find(
-          (r) => r.number.toLowerCase() === op.number.toLowerCase()
-        );
-        if (exists) return { error: `Rule "${op.number}" already exists` };
-        lore.rules.push({
-          number: op.number,
-          name: op.name,
-          emoji: op.emoji || "⚖️",
-          description: op.description || "",
-          enforcedBy: op.enforcedBy || "System",
-          penalty: op.penalty || "TBD",
-        });
-        return { ok: true, added: op.number, section: "rules" };
-      }
-
-      case "update_rule": {
-        const rule = lore.rules.find(
-          (r) => r.number.toLowerCase() === op.number.toLowerCase()
-        );
-        if (!rule) return { error: `Rule "${op.number}" not found` };
-        if (op.name !== undefined) rule.name = op.name;
-        if (op.emoji !== undefined) rule.emoji = op.emoji;
-        if (op.description !== undefined) rule.description = op.description;
-        if (op.enforcedBy !== undefined) rule.enforcedBy = op.enforcedBy;
-        if (op.penalty !== undefined) rule.penalty = op.penalty;
-        if (op.newNumber !== undefined) rule.number = op.newNumber;
-        return { ok: true, updated: rule.number, section: "rules" };
-      }
-
-      case "remove_rule": {
-        const idx = lore.rules.findIndex(
-          (r) => r.number.toLowerCase() === op.number.toLowerCase()
-        );
-        if (idx === -1) return { error: `Rule "${op.number}" not found` };
-        const number = lore.rules[idx].number;
-        lore.rules.splice(idx, 1);
-        return { ok: true, removed: number, section: "rules" };
-      }
-
-      // ── Bills ──────────────────────────────────────────────────────
-      case "add_bill": {
-        const exists = lore.bills.find(
-          (b) => b.number.toLowerCase() === op.number.toLowerCase()
-        );
-        if (exists) return { error: `Bill "${op.number}" already exists` };
-        lore.bills.push({
-          number: op.number,
-          name: op.name,
-          date: op.date || new Date().toISOString().split("T")[0],
-          status: op.status || "Pending",
-          emoji: op.emoji || "🏛️",
-          proposedBy: op.proposedBy || "Unknown",
-          summary: op.summary || "",
-          votes: op.votes || { for: 0, against: 0, abstain: 0 },
-        });
-        return { ok: true, added: op.number, section: "bills" };
-      }
-
-      case "update_bill": {
-        const bill = lore.bills.find(
-          (b) => b.number.toLowerCase() === op.number.toLowerCase()
-        );
-        if (!bill) return { error: `Bill "${op.number}" not found` };
-        if (op.name !== undefined) bill.name = op.name;
-        if (op.date !== undefined) bill.date = op.date;
-        if (op.status !== undefined) bill.status = op.status;
-        if (op.emoji !== undefined) bill.emoji = op.emoji;
-        if (op.proposedBy !== undefined) bill.proposedBy = op.proposedBy;
-        if (op.summary !== undefined) bill.summary = op.summary;
-        if (op.votes !== undefined) bill.votes = op.votes;
-        if (op.newNumber !== undefined) bill.number = op.newNumber;
-        return { ok: true, updated: bill.number, section: "bills" };
-      }
-
-      case "remove_bill": {
-        const idx = lore.bills.findIndex(
-          (b) => b.number.toLowerCase() === op.number.toLowerCase()
-        );
-        if (idx === -1) return { error: `Bill "${op.number}" not found` };
-        const number = lore.bills[idx].number;
-        lore.bills.splice(idx, 1);
-        return { ok: true, removed: number, section: "bills" };
-      }
-
-      // ── Lore Entries ───────────────────────────────────────────────
-      case "add_lore": {
-        const exists = lore.lore.find(
-          (l) => l.title.toLowerCase() === op.title.toLowerCase()
-        );
-        if (exists) return { error: `Lore entry "${op.title}" already exists` };
-        lore.lore.push({
-          title: op.title,
-          date: op.date || new Date().toISOString().split("T")[0],
-          emoji: op.emoji || "📖",
-          category: op.category || "Miscellaneous",
-          description: op.description || "",
-        });
-        return { ok: true, added: op.title, section: "lore" };
-      }
-
-      case "update_lore": {
-        const entry = lore.lore.find(
-          (l) => l.title.toLowerCase() === op.title.toLowerCase()
-        );
-        if (!entry) return { error: `Lore entry "${op.title}" not found` };
-        if (op.date !== undefined) entry.date = op.date;
-        if (op.emoji !== undefined) entry.emoji = op.emoji;
-        if (op.category !== undefined) entry.category = op.category;
-        if (op.description !== undefined) entry.description = op.description;
-        if (op.newTitle !== undefined) entry.title = op.newTitle;
-        return { ok: true, updated: entry.title, section: "lore" };
-      }
-
-      case "remove_lore": {
-        const idx = lore.lore.findIndex(
-          (l) => l.title.toLowerCase() === op.title.toLowerCase()
-        );
-        if (idx === -1) return { error: `Lore entry "${op.title}" not found` };
-        const title = lore.lore[idx].title;
-        lore.lore.splice(idx, 1);
-        return { ok: true, removed: title, section: "lore" };
-      }
-
-      // ── Bulk & Replace ─────────────────────────────────────────────
-      case "bulk": {
-        const bulkResults = [];
-        for (const subOp of op.operations || []) {
-          bulkResults.push(processOp(subOp));
-        }
-        return { ok: true, results: bulkResults };
-      }
-
-      case "replace": {
-        if (op.chain !== undefined) lore.chain = op.chain;
-        if (op.treaties !== undefined) lore.treaties = op.treaties;
-        if (op.rules !== undefined) lore.rules = op.rules;
-        if (op.bills !== undefined) lore.bills = op.bills;
-        if (op.lore !== undefined) lore.lore = op.lore;
-        return { ok: true, replaced: true };
-      }
-
-      default:
-        return { error: `Unknown action "${op.action}"` };
-    }
-  }
-
-  const result = processOp(body);
-  await setLoreData(kv, lore);
-
-  return new Response(JSON.stringify({ ...result, lore }), {
-    headers: { "Content-Type": "application/json", ...corsHeaders() },
-  });
-}
-
 // ── Route: GET / ────────────────────────────────────────────────────────
 
 async function handlePage(kv) {
   const data = await ensureData(kv);
-  const lore = await ensureLoreData(kv);
-  const html = generateHTML(data, lore);
+  const html = generateHTML(data);
   return new Response(html, {
     headers: { "Content-Type": "text/html;charset=UTF-8" },
   });
@@ -793,12 +769,13 @@ async function handlePage(kv) {
 
 // ── HTML Template ───────────────────────────────────────────────────────
 
-function generateHTML(data, lore) {
-  const chainJSON = JSON.stringify(lore.chain);
-  const treatiesJSON = JSON.stringify(lore.treaties);
-  const rulesJSON = JSON.stringify(lore.rules);
-  const billsJSON = JSON.stringify(lore.bills);
-  const loreJSON = JSON.stringify(lore.lore);
+function generateHTML(data) {
+  // All sections now come from data (KV), not hardcoded consts
+  const chainJSON = JSON.stringify(data.chain || []);
+  const treatiesJSON = JSON.stringify(data.treaties || []);
+  const rulesJSON = JSON.stringify(data.rules || []);
+  const billsJSON = JSON.stringify(data.bills || []);
+  const loreJSON = JSON.stringify(data.lore || []);
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -1369,214 +1346,144 @@ function generateHTML(data, lore) {
     align-items: center;
     gap: 12px;
     opacity: 0;
-    transform: translateX(-20px);
-    animation: slideIn 0.6s ease forwards;
+    animation: slideIn 0.5s ease forwards;
   }
 
-  .crew-info {
+  .bar-row:nth-child(1) { animation-delay: 0.05s; }
+  .bar-row:nth-child(2) { animation-delay: 0.1s; }
+  .bar-row:nth-child(3) { animation-delay: 0.15s; }
+  .bar-row:nth-child(4) { animation-delay: 0.2s; }
+  .bar-row:nth-child(5) { animation-delay: 0.25s; }
+  .bar-row:nth-child(6) { animation-delay: 0.3s; }
+  .bar-row:nth-child(7) { animation-delay: 0.35s; }
+  .bar-row:nth-child(8) { animation-delay: 0.4s; }
+  .bar-row:nth-child(9) { animation-delay: 0.45s; }
+  .bar-row:nth-child(10) { animation-delay: 0.5s; }
+
+  .bar-label {
     display: flex;
     align-items: center;
     gap: 8px;
-    min-width: 0;
-  }
-
-  .crew-emoji { font-size: 1.3rem; flex-shrink: 0; }
-
-  .crew-details { min-width: 0; }
-
-  .crew-name {
     font-size: 0.85rem;
-    color: #fff;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
   }
 
-  .crew-rank {
-    font-size: 0.6rem;
+  .bar-emoji {
+    font-size: 1.2rem;
+  }
+
+  .bar-name {
+    color: #fff;
+    font-weight: bold;
+  }
+
+  .bar-rank {
+    font-size: 0.65rem;
     color: var(--dim);
-    letter-spacing: 1px;
     text-transform: uppercase;
+    letter-spacing: 1px;
   }
 
   .bar-track {
-    height: 28px;
-    background: rgba(255, 255, 255, 0.03);
+    height: 24px;
+    background: rgba(255, 255, 255, 0.05);
     border-radius: 4px;
     overflow: hidden;
     position: relative;
-    border: 1px solid rgba(255, 255, 255, 0.05);
   }
 
   .bar-fill {
     height: 100%;
-    border-radius: 3px;
+    background: linear-gradient(90deg, var(--cyan), var(--magenta));
+    border-radius: 4px;
+    transition: width 1s ease;
     position: relative;
-    width: 0;
-    animation: fillBar 1.5s ease forwards;
   }
 
   .bar-fill::after {
     content: '';
     position: absolute;
-    top: 0; right: 0;
-    width: 2px; height: 100%;
-    background: #fff;
-    opacity: 0.8;
-    box-shadow: 0 0 10px currentColor;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    animation: shimmer 2s infinite;
   }
 
-  .bar-score {
+  .bar-value {
     font-family: 'Orbitron', sans-serif;
-    font-size: 0.9rem;
+    font-size: 1rem;
     font-weight: 700;
-    text-align: right;
-    min-width: 60px;
-  }
-
-  .score-high { color: var(--gold); }
-  .score-good { color: var(--green); }
-  .score-neutral { color: var(--cyan); }
-  .score-low { color: var(--red); }
-
-  .bar-high {
-    background: linear-gradient(90deg, rgba(255, 215, 0, 0.3), rgba(255, 215, 0, 0.6));
-    color: var(--gold);
-    box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
-  }
-  .bar-good {
-    background: linear-gradient(90deg, rgba(0, 255, 136, 0.2), rgba(0, 255, 136, 0.5));
-    color: var(--green);
-    box-shadow: 0 0 15px rgba(0, 255, 136, 0.2);
-  }
-  .bar-neutral {
-    background: linear-gradient(90deg, rgba(0, 200, 255, 0.2), rgba(0, 200, 255, 0.5));
     color: var(--cyan);
-    box-shadow: 0 0 15px rgba(0, 200, 255, 0.2);
-  }
-  .bar-low {
-    background: linear-gradient(90deg, rgba(255, 51, 85, 0.2), rgba(255, 51, 85, 0.5));
-    color: var(--red);
-    box-shadow: 0 0 15px rgba(255, 51, 85, 0.2);
+    text-align: right;
   }
 
-  .bar-ruby {
-    background: linear-gradient(90deg, rgba(224, 17, 95, 0.2), rgba(224, 17, 95, 0.5));
+  .rubies-section .bar-fill {
+    background: linear-gradient(90deg, var(--ruby), #ff6b8a);
+  }
+
+  .rubies-section .bar-value {
     color: var(--ruby);
-    box-shadow: 0 0 15px rgba(224, 17, 95, 0.2);
   }
-  .bar-ruby-high {
-    background: linear-gradient(90deg, rgba(255, 215, 0, 0.3), rgba(255, 215, 0, 0.6));
-    color: var(--gold);
-    box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
-  }
-
-  .score-ruby { color: var(--ruby); }
-  .score-ruby-high { color: var(--gold); }
 
   /* Changelog */
-  .changelog-list {
-    max-height: 400px;
+  .changelog {
+    max-height: 300px;
     overflow-y: auto;
   }
 
-  .log-entry {
+  .changelog-entry {
     display: grid;
-    grid-template-columns: 90px 100px 50px 1fr;
+    grid-template-columns: 90px 100px 60px 1fr;
     gap: 12px;
     padding: 10px 0;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     font-size: 0.8rem;
-    align-items: center;
   }
 
-  .log-entry:last-child { border-bottom: none; }
+  .changelog-date {
+    color: var(--dim);
+  }
 
-  .log-date { color: var(--dim); font-size: 0.7rem; }
-  .log-who { color: #fff; font-weight: bold; }
+  .changelog-who {
+    color: #fff;
+    font-weight: bold;
+  }
 
-  .log-change {
+  .changelog-change {
     font-family: 'Orbitron', sans-serif;
     font-weight: 700;
-    text-align: center;
   }
 
-  .log-change.positive { color: var(--green); }
-  .log-change.negative { color: var(--red); }
-  .log-change.ruby-positive { color: var(--ruby); }
-
-  .log-reason { color: var(--dim); font-style: italic; }
-
-  /* Top Cards */
-  .top-crew {
-    display: flex;
-    justify-content: center;
-    gap: 30px;
-    margin: 20px 0;
-    flex-wrap: wrap;
+  .changelog-change.positive {
+    color: var(--green);
   }
 
-  .top-card {
-    text-align: center;
-    padding: 20px 28px;
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    background: var(--panel);
-    min-width: 150px;
+  .changelog-change.negative {
+    color: var(--red);
   }
 
-  .top-card.gold { border-color: rgba(255, 215, 0, 0.4); box-shadow: 0 0 20px rgba(255, 215, 0, 0.1); }
-  .top-card.danger { border-color: rgba(255, 51, 85, 0.4); box-shadow: 0 0 20px rgba(255, 51, 85, 0.1); }
-  .top-card.ruby { border-color: rgba(224, 17, 95, 0.4); box-shadow: 0 0 20px rgba(224, 17, 95, 0.1); }
-
-  .top-card .card-label {
-    font-family: 'Orbitron', sans-serif;
-    font-size: 0.55rem;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    color: var(--dim);
-    margin-bottom: 8px;
+  .changelog-reason {
+    color: var(--text);
   }
 
-  .top-card .card-emoji { font-size: 2.2rem; margin-bottom: 8px; }
-  .top-card .card-name { font-size: 0.85rem; color: #fff; margin-bottom: 4px; }
-
-  .top-card .card-score {
-    font-family: 'Orbitron', sans-serif;
-    font-size: 1.6rem;
-    font-weight: 900;
-  }
-
-  .top-card.gold .card-score { color: var(--gold); }
-  .top-card.danger .card-score { color: var(--red); }
-  .top-card.ruby .card-score { color: var(--ruby); }
-
+  /* Footer */
   .footer {
     text-align: center;
-    padding: 30px 20px 40px;
+    padding: 40px 20px;
+    font-size: 0.7rem;
     color: var(--dim);
-    font-size: 0.6rem;
-    letter-spacing: 3px;
-    text-transform: uppercase;
+    letter-spacing: 2px;
   }
 
   .footer a {
     color: var(--cyan);
     text-decoration: none;
-    opacity: 0.5;
-    transition: opacity 0.3s;
   }
-
-  .footer a:hover { opacity: 1; }
 
   .last-updated {
-    text-align: center;
-    font-size: 0.65rem;
-    color: var(--dim);
-    margin-top: 20px;
-    letter-spacing: 1px;
+    margin-top: 8px;
+    font-size: 0.6rem;
   }
 
+  /* Animations */
   @keyframes gradientShift {
     0%, 100% { background-position: 0% 50%; }
     50% { background-position: 100% 50%; }
@@ -1584,28 +1491,61 @@ function generateHTML(data, lore) {
 
   @keyframes pulse {
     0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.4; transform: scale(0.8); }
+    50% { opacity: 0.5; transform: scale(0.8); }
   }
 
-  @keyframes slideIn { to { opacity: 1; transform: translateX(0); } }
-  @keyframes fillBar { to { width: var(--fill-width); } }
-  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
 
-  @media (max-width: 800px) {
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateX(-20px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  @keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: var(--bg);
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 3px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--cyan);
+  }
+
+  /* Mobile */
+  @media (max-width: 768px) {
     .command-card {
       grid-template-columns: 40px 1fr;
-      gap: 12px;
     }
-    .command-desc { display: none; }
+    .command-desc {
+      grid-column: 1 / -1;
+      margin-top: 8px;
+    }
     .bar-row {
-      grid-template-columns: 100px 1fr 50px;
-      gap: 8px;
+      grid-template-columns: 1fr 60px;
     }
-    .log-entry {
+    .bar-track {
+      display: none;
+    }
+    .changelog-entry {
       grid-template-columns: 1fr;
       gap: 4px;
     }
-    .nav-btn { padding: 8px 10px; font-size: 0.6rem; }
   }
 </style>
 </head>
@@ -1615,11 +1555,11 @@ function generateHTML(data, lore) {
 
 <div class="container">
   <header class="header">
-    <div class="ship-name">USS Kittyprise</div>
-    <div class="subtitle">Official Ship's Wiki & Records</div>
+    <h1 class="ship-name">USS Kittyprise</h1>
+    <p class="subtitle">Ship's Wiki & Registry</p>
     <div class="system-status">
       <span class="status-dot"></span>
-      <span>All Systems Operational</span>
+      <span>Systems Online</span>
     </div>
   </header>
 
@@ -1633,108 +1573,87 @@ function generateHTML(data, lore) {
     <button class="nav-btn" data-section="lore">📖 Lore</button>
   </nav>
 
-  <!-- CREDIT SECTION -->
-  <div class="section active" id="credit">
-    <div class="top-crew" id="credit-top"></div>
-    <div class="panel">
-      <div class="section-title">Social Credit Standings</div>
-      <div class="bar-chart" id="credit-chart"></div>
-    </div>
-    <div class="panel">
-      <div class="section-title">Credit Activity Log</div>
-      <div class="changelog-list" id="credit-log"></div>
-    </div>
-  </div>
+  <main>
+    <!-- Social Credit Section -->
+    <section id="credit" class="section active">
+      <div class="panel">
+        <h2 class="section-title">📊 Social Credit Standings</h2>
+        <div class="bar-chart" id="credit-chart"></div>
+      </div>
+      <div class="panel">
+        <h2 class="section-title">📜 Credit Changelog</h2>
+        <div class="changelog" id="credit-log"></div>
+      </div>
+    </section>
 
-  <!-- RUBIES SECTION -->
-  <div class="section" id="rubies">
-    <div class="top-crew" id="rubies-top"></div>
-    <div class="panel" style="border-color: rgba(224, 17, 95, 0.25);">
-      <div class="section-title" style="color: var(--ruby);">💎 Rubies Balances</div>
-      <div class="bar-chart" id="rubies-chart"></div>
-    </div>
-    <div class="panel" style="border-color: rgba(224, 17, 95, 0.25);">
-      <div class="section-title" style="color: var(--ruby);">💎 Rubies Transactions</div>
-      <div class="changelog-list" id="rubies-log"></div>
-    </div>
-  </div>
+    <!-- Rubies Section -->
+    <section id="rubies" class="section">
+      <div class="panel rubies-section">
+        <h2 class="section-title" style="color: var(--ruby);">💎 Rubies Balances</h2>
+        <div class="bar-chart" id="rubies-chart"></div>
+      </div>
+      <div class="panel">
+        <h2 class="section-title" style="color: var(--ruby);">💎 Rubies Ledger</h2>
+        <div class="changelog" id="rubies-log"></div>
+      </div>
+    </section>
 
-  <!-- COMMAND SECTION -->
-  <div class="section" id="command">
-    <div class="panel" style="border-color: rgba(255, 215, 0, 0.25);">
-      <div class="section-title" style="color: var(--gold);">👑 Chain of Command</div>
-      <div class="command-grid" id="command-grid"></div>
-    </div>
-  </div>
+    <!-- Chain of Command Section -->
+    <section id="command" class="section">
+      <div class="panel">
+        <h2 class="section-title" style="color: var(--gold);">👑 Chain of Command</h2>
+        <div class="command-grid" id="command-grid"></div>
+      </div>
+    </section>
 
-  <!-- TREATIES SECTION -->
-  <div class="section" id="treaties">
-    <div class="panel" style="border-color: rgba(155, 89, 182, 0.25);">
-      <div class="section-title" style="color: var(--purple);">📜 Active Treaties</div>
-      <div id="treaties-list"></div>
-    </div>
-  </div>
+    <!-- Treaties Section -->
+    <section id="treaties" class="section">
+      <div class="panel">
+        <h2 class="section-title" style="color: var(--purple);">📜 Treaties & Accords</h2>
+        <div id="treaties-list"></div>
+      </div>
+    </section>
 
-  <!-- RULES SECTION -->
-  <div class="section" id="rules">
-    <div class="panel" style="border-color: rgba(255, 51, 85, 0.25);">
-      <div class="section-title" style="color: var(--red);">⚖️ Ship's Rules</div>
-      <div id="rules-list"></div>
-    </div>
-  </div>
+    <!-- Rules Section -->
+    <section id="rules" class="section">
+      <div class="panel">
+        <h2 class="section-title" style="color: var(--red);">⚖️ Ship's Rules</h2>
+        <div id="rules-list"></div>
+      </div>
+    </section>
 
-  <!-- BILLS SECTION -->
-  <div class="section" id="bills">
-    <div class="panel" style="border-color: rgba(0, 255, 136, 0.25);">
-      <div class="section-title" style="color: var(--green);">🏛️ Bills & Legislation</div>
-      <div id="bills-list"></div>
-    </div>
-  </div>
+    <!-- Bills Section -->
+    <section id="bills" class="section">
+      <div class="panel">
+        <h2 class="section-title" style="color: var(--green);">🏛️ Parliamentary Bills</h2>
+        <div id="bills-list"></div>
+      </div>
+    </section>
 
-  <!-- LORE SECTION -->
-  <div class="section" id="lore">
-    <div class="panel" style="border-color: rgba(243, 156, 18, 0.25);">
-      <div class="section-title" style="color: var(--orange);">📖 Ship's Lore</div>
-      <div id="lore-list"></div>
-    </div>
-  </div>
-
-  <div class="last-updated" id="last-updated"></div>
+    <!-- Lore Section -->
+    <section id="lore" class="section">
+      <div class="panel">
+        <h2 class="section-title" style="color: var(--orange);">📖 Ship's Lore</h2>
+        <div id="lore-list"></div>
+      </div>
+    </section>
+  </main>
 
   <footer class="footer">
-    <a href="https://chaoscat.win" target="_blank">chaoscat.win</a> — meow 🐱
+    <p>USS Kittyprise • <a href="https://chaoscat.win">chaoscat.win</a></p>
+    <p class="last-updated">Last updated: <span id="last-updated"></span></p>
   </footer>
 </div>
 
 <script>
-  // Load data
+(function() {
+  // Parse data from embedded JSON
   const scoreData = JSON.parse(document.getElementById('score-data').textContent);
   const chainData = JSON.parse(document.getElementById('chain-data').textContent);
   const treatiesData = JSON.parse(document.getElementById('treaties-data').textContent);
   const rulesData = JSON.parse(document.getElementById('rules-data').textContent);
   const billsData = JSON.parse(document.getElementById('bills-data').textContent);
   const loreData = JSON.parse(document.getElementById('lore-data').textContent);
-
-  // Starfield
-  const canvas = document.getElementById('starfield');
-  const ctx = canvas.getContext('2d');
-
-  function drawStars() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-    for (let i = 0; i < 200; i++) {
-      const x = Math.random() * canvas.width;
-      const y = Math.random() * canvas.height;
-      const size = Math.random() * 1.5 + 0.5;
-      const brightness = Math.random() * 0.5 + 0.2;
-      ctx.beginPath();
-      ctx.arc(x, y, size, 0, Math.PI * 2);
-      ctx.fillStyle = \`rgba(200, 220, 255, \${brightness})\`;
-      ctx.fill();
-    }
-  }
-  drawStars();
-  window.addEventListener('resize', drawStars);
 
   // Navigation
   document.querySelectorAll('.nav-btn').forEach(btn => {
@@ -1746,304 +1665,256 @@ function generateHTML(data, lore) {
     });
   });
 
-  // Helper functions
-  function getScoreClass(score) {
-    if (score >= 110) return 'high';
-    if (score > 100) return 'good';
-    if (score === 100) return 'neutral';
-    return 'low';
-  }
-
-  function getRubyClass(balance) {
-    if (balance >= 100) return 'ruby-high';
-    return 'ruby';
-  }
-
-  function getMemberInfo(name) {
-    return scoreData.scores.find(s => s.name.toLowerCase() === name.toLowerCase()) || { emoji: '👤', rank: 'Civilian' };
-  }
-
-  // ═══ CREDIT SECTION ═══
-  const scores = [...scoreData.scores].sort((a, b) => b.score - a.score);
-  const maxScore = Math.max(...scores.map(s => s.score)) + 10;
-
-  // Top cards
-  const creditTop = document.getElementById('credit-top');
-  const highest = scores[0];
-  const lowest = scores[scores.length - 1];
-  
-  creditTop.innerHTML = \`
-    <div class="top-card gold">
-      <div class="card-label">★ Highest Credit</div>
-      <div class="card-emoji">\${highest.emoji}</div>
-      <div class="card-name">\${highest.name}</div>
-      <div class="card-score">\${highest.score}</div>
-    </div>
-    \${lowest.score < highest.score ? \`
-    <div class="top-card danger">
-      <div class="card-label">⚠ Lowest Credit</div>
-      <div class="card-emoji">\${lowest.emoji}</div>
-      <div class="card-name">\${lowest.name}</div>
-      <div class="card-score">\${lowest.score}</div>
-    </div>\` : ''}
-  \`;
-
-  // Bar chart
-  const creditChart = document.getElementById('credit-chart');
-  scores.forEach((member, i) => {
-    const pct = ((member.score / maxScore) * 100).toFixed(1);
-    const cls = getScoreClass(member.score);
-    const row = document.createElement('div');
-    row.className = 'bar-row';
-    row.style.animationDelay = \`\${i * 0.08}s\`;
-    row.innerHTML = \`
-      <div class="crew-info">
-        <span class="crew-emoji">\${member.emoji}</span>
-        <div class="crew-details">
-          <div class="crew-name">\${member.name}</div>
-          <div class="crew-rank">\${member.rank}</div>
-        </div>
-      </div>
-      <div class="bar-track">
-        <div class="bar-fill bar-\${cls}" style="--fill-width: \${pct}%; animation-delay: \${i * 0.1}s"></div>
-      </div>
-      <div class="bar-score score-\${cls}">\${member.score}</div>
-    \`;
-    creditChart.appendChild(row);
-  });
-
-  // Changelog
-  const creditLog = document.getElementById('credit-log');
-  scoreData.changelog.forEach(entry => {
-    const isPositive = entry.change.startsWith('+');
-    creditLog.innerHTML += \`
-      <div class="log-entry">
-        <span class="log-date">\${entry.date}</span>
-        <span class="log-who">\${entry.who}</span>
-        <span class="log-change \${isPositive ? 'positive' : 'negative'}">\${entry.change}</span>
-        <span class="log-reason">\${entry.reason}</span>
-      </div>
-    \`;
-  });
-
-  // ═══ RUBIES SECTION ═══
-  const rubies = [...(scoreData.rubies || [])].sort((a, b) => b.balance - a.balance);
-  const maxRubies = Math.max(...rubies.map(r => r.balance), 60) + 10;
-
-  // Top cards
-  const rubiesTop = document.getElementById('rubies-top');
-  if (rubies.length > 0) {
-    const richest = rubies[0];
-    const poorest = rubies[rubies.length - 1];
-    const richInfo = getMemberInfo(richest.name);
-    const poorInfo = getMemberInfo(poorest.name);
-    
-    rubiesTop.innerHTML = \`
-      <div class="top-card ruby">
-        <div class="card-label">💎 Most Rubies</div>
-        <div class="card-emoji">\${richInfo.emoji}</div>
-        <div class="card-name">\${richest.name}</div>
-        <div class="card-score">\${richest.balance}</div>
-      </div>
-      \${poorest.balance < richest.balance ? \`
-      <div class="top-card danger">
-        <div class="card-label">💸 Least Rubies</div>
-        <div class="card-emoji">\${poorInfo.emoji}</div>
-        <div class="card-name">\${poorest.name}</div>
-        <div class="card-score">\${poorest.balance}</div>
-      </div>\` : ''}
-    \`;
-  }
-
-  // Bar chart
-  const rubiesChart = document.getElementById('rubies-chart');
-  rubies.forEach((entry, i) => {
-    const info = getMemberInfo(entry.name);
-    const pct = Math.max(((entry.balance / maxRubies) * 100), 2).toFixed(1);
-    const cls = getRubyClass(entry.balance);
-    const row = document.createElement('div');
-    row.className = 'bar-row';
-    row.style.animationDelay = \`\${i * 0.08}s\`;
-    row.innerHTML = \`
-      <div class="crew-info">
-        <span class="crew-emoji">\${info.emoji}</span>
-        <div class="crew-details">
-          <div class="crew-name">\${entry.name}</div>
-          <div class="crew-rank">\${info.rank}</div>
-        </div>
-      </div>
-      <div class="bar-track">
-        <div class="bar-fill bar-\${cls}" style="--fill-width: \${pct}%; animation-delay: \${i * 0.1}s"></div>
-      </div>
-      <div class="bar-score score-\${cls}">\${entry.balance}</div>
-    \`;
-    rubiesChart.appendChild(row);
-  });
-
-  // Rubies log
-  const rubiesLog = document.getElementById('rubies-log');
-  (scoreData.rubiesLog || []).forEach(entry => {
-    const isPositive = entry.change.startsWith('+');
-    rubiesLog.innerHTML += \`
-      <div class="log-entry">
-        <span class="log-date">\${entry.date}</span>
-        <span class="log-who">\${entry.who}</span>
-        <span class="log-change \${isPositive ? 'ruby-positive' : 'negative'}">\${entry.change}</span>
-        <span class="log-reason">\${entry.reason}</span>
-      </div>
-    \`;
-  });
-
-  // ═══ COMMAND SECTION ═══
-  const commandGrid = document.getElementById('command-grid');
-  chainData.forEach((member, i) => {
-    const isTop = i < 4;
-    commandGrid.innerHTML += \`
-      <div class="command-card \${isTop ? 'highlight' : ''}">
-        <div class="command-emoji">\${member.emoji}</div>
-        <div class="command-info">
-          <h3>\${member.name}</h3>
-          <div class="command-rank">\${member.rank}</div>
-          <div class="command-title">\${member.title}</div>
-        </div>
-        <div class="command-desc">\${member.description}</div>
-      </div>
-    \`;
-  });
-
-  // ═══ TREATIES SECTION ═══
-  const treatiesList = document.getElementById('treaties-list');
-  treatiesData.forEach(treaty => {
-    treatiesList.innerHTML += \`
-      <div class="treaty-card">
-        <div class="treaty-header">
-          <div class="treaty-emoji">\${treaty.emoji}</div>
-          <div class="treaty-title">
-            <h3>\${treaty.name}</h3>
-            <div class="treaty-date">Signed: \${treaty.date}</div>
+  // Render Credit Chart
+  function renderCreditChart() {
+    const sorted = [...scoreData.scores].sort((a, b) => b.score - a.score);
+    const max = Math.max(...sorted.map(s => s.score), 100);
+    const container = document.getElementById('credit-chart');
+    container.innerHTML = sorted.map(s => \`
+      <div class="bar-row">
+        <div class="bar-label">
+          <span class="bar-emoji">\${s.emoji}</span>
+          <div>
+            <div class="bar-name">\${s.name}</div>
+            <div class="bar-rank">\${s.rank}</div>
           </div>
         </div>
-        <div class="treaty-summary">\${treaty.summary}</div>
-        <div class="treaty-parties"><strong>Parties:</strong> \${treaty.parties.join(', ')}</div>
+        <div class="bar-track">
+          <div class="bar-fill" style="width: \${(s.score / max) * 100}%"></div>
+        </div>
+        <div class="bar-value">\${s.score}</div>
+      </div>
+    \`).join('');
+  }
+
+  // Render Rubies Chart
+  function renderRubiesChart() {
+    const sorted = [...scoreData.rubies].sort((a, b) => b.balance - a.balance);
+    const max = Math.max(...sorted.map(r => Math.abs(r.balance)), 100);
+    const container = document.getElementById('rubies-chart');
+    container.innerHTML = sorted.map(r => {
+      const member = scoreData.scores.find(s => s.name.toLowerCase() === r.name.toLowerCase());
+      const emoji = member?.emoji || '👤';
+      return \`
+        <div class="bar-row">
+          <div class="bar-label">
+            <span class="bar-emoji">\${emoji}</span>
+            <div>
+              <div class="bar-name">\${r.name}</div>
+            </div>
+          </div>
+          <div class="bar-track">
+            <div class="bar-fill" style="width: \${(Math.abs(r.balance) / max) * 100}%"></div>
+          </div>
+          <div class="bar-value">\${r.balance}</div>
+        </div>
+      \`;
+    }).join('');
+  }
+
+  // Render Changelog
+  function renderChangelog(entries, containerId) {
+    const container = document.getElementById(containerId);
+    container.innerHTML = entries.slice(0, 50).map(e => \`
+      <div class="changelog-entry">
+        <span class="changelog-date">\${e.date}</span>
+        <span class="changelog-who">\${e.who}</span>
+        <span class="changelog-change \${e.change.startsWith('+') ? 'positive' : 'negative'}">\${e.change}</span>
+        <span class="changelog-reason">\${e.reason}</span>
+      </div>
+    \`).join('');
+  }
+
+  // Render Chain of Command
+  function renderCommand() {
+    const container = document.getElementById('command-grid');
+    const highlights = ['Admiral', 'Captain', 'First Officer'];
+    container.innerHTML = chainData.map(c => \`
+      <div class="command-card \${highlights.includes(c.rank) ? 'highlight' : ''}">
+        <div class="command-emoji">\${c.emoji}</div>
+        <div class="command-info">
+          <h3>\${c.name}</h3>
+          <div class="command-rank">\${c.rank}</div>
+          <div class="command-title">\${c.title}</div>
+        </div>
+        <div class="command-desc">\${c.description}</div>
+      </div>
+    \`).join('');
+  }
+
+  // Render Treaties
+  function renderTreaties() {
+    const container = document.getElementById('treaties-list');
+    container.innerHTML = treatiesData.map(t => \`
+      <div class="treaty-card">
+        <div class="treaty-header">
+          <span class="treaty-emoji">\${t.emoji}</span>
+          <div class="treaty-title">
+            <h3>\${t.name}</h3>
+            <div class="treaty-date">Signed: \${t.date}</div>
+          </div>
+        </div>
+        <p class="treaty-summary">\${t.summary}</p>
+        <p class="treaty-parties"><strong>Parties:</strong> \${t.parties.join(', ')}</p>
         <ul class="treaty-terms">
-          \${treaty.terms.map(t => \`<li>\${t}</li>\`).join('')}
+          \${t.terms.map(term => \`<li>\${term}</li>\`).join('')}
         </ul>
       </div>
-    \`;
-  });
+    \`).join('');
+  }
 
-  // ═══ RULES SECTION ═══
-  const rulesList = document.getElementById('rules-list');
-  rulesData.forEach(rule => {
-    rulesList.innerHTML += \`
+  // Render Rules
+  function renderRules() {
+    const container = document.getElementById('rules-list');
+    container.innerHTML = rulesData.map(r => \`
       <div class="rule-card">
         <div class="rule-header">
-          <span class="rule-number">\${rule.number}</span>
-          <span class="rule-emoji">\${rule.emoji}</span>
-          <span class="rule-name">\${rule.name}</span>
+          <span class="rule-number">\${r.number}</span>
+          <span class="rule-emoji">\${r.emoji}</span>
+          <span class="rule-name">\${r.name}</span>
         </div>
-        <div class="rule-desc">\${rule.description}</div>
+        <p class="rule-desc">\${r.description}</p>
         <div class="rule-meta">
-          <span><strong>Enforced by:</strong> \${rule.enforcedBy}</span>
-          <span><strong>Penalty:</strong> \${rule.penalty}</span>
+          <span><strong>Enforced by:</strong> \${r.enforcedBy}</span>
+          <span><strong>Penalty:</strong> \${r.penalty}</span>
         </div>
       </div>
-    \`;
-  });
+    \`).join('');
+  }
 
-  // ═══ BILLS SECTION ═══
-  const billsList = document.getElementById('bills-list');
-  billsData.forEach(bill => {
-    const statusClass = bill.status.toLowerCase();
-    billsList.innerHTML += \`
+  // Render Bills
+  function renderBills() {
+    const container = document.getElementById('bills-list');
+    container.innerHTML = billsData.map(b => \`
       <div class="bill-card">
         <div class="bill-header">
           <div class="bill-title-group">
-            <span class="bill-number">\${bill.number}</span>
-            <span class="bill-name">\${bill.name}</span>
+            <span class="bill-number">\${b.number}</span>
+            <span class="bill-name">\${b.name}</span>
           </div>
-          <span class="bill-status \${statusClass}">\${bill.status}</span>
+          <span class="bill-status \${b.status.toLowerCase()}">\${b.status}</span>
         </div>
-        <div class="bill-summary">\${bill.summary}</div>
+        <p class="bill-summary">\${b.summary}</p>
         <div class="bill-meta">
-          <span><strong>Date:</strong> \${bill.date}</span>
-          <span><strong>Proposed by:</strong> \${bill.proposedBy}</span>
+          <span><strong>Date:</strong> \${b.date}</span>
+          <span><strong>Proposed by:</strong> \${b.proposedBy}</span>
           <span class="bill-votes">
-            <span class="vote-for">✓ \${bill.votes.for}</span> /
-            <span class="vote-against">✗ \${bill.votes.against}</span> /
-            <span class="vote-abstain">○ \${bill.votes.abstain}</span>
+            <strong>Votes:</strong>
+            <span class="vote-for">\${b.votes.for} for</span> /
+            <span class="vote-against">\${b.votes.against} against</span> /
+            <span class="vote-abstain">\${b.votes.abstain} abstain</span>
           </span>
         </div>
       </div>
-    \`;
-  });
+    \`).join('');
+  }
 
-  // ═══ LORE SECTION ═══
-  const loreList = document.getElementById('lore-list');
-  loreData.forEach(entry => {
-    loreList.innerHTML += \`
+  // Render Lore
+  function renderLore() {
+    const container = document.getElementById('lore-list');
+    container.innerHTML = loreData.map(l => \`
       <div class="lore-card">
         <div class="lore-header">
-          <div class="lore-emoji">\${entry.emoji}</div>
+          <span class="lore-emoji">\${l.emoji}</span>
           <div class="lore-title">
-            <h3>\${entry.title}</h3>
-            <div class="lore-category">\${entry.category}</div>
-            <div class="lore-date">\${entry.date}</div>
+            <h3>\${l.title}</h3>
+            <div class="lore-category">\${l.category}</div>
+            <div class="lore-date">\${l.date}</div>
           </div>
         </div>
-        <div class="lore-desc">\${entry.description}</div>
+        <p class="lore-desc">\${l.description}</p>
       </div>
-    \`;
-  });
+    \`).join('');
+  }
 
   // Last updated
-  const updated = new Date(scoreData.lastUpdated);
-  document.getElementById('last-updated').textContent =
-    'Last updated: ' + updated.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) +
-    ' at ' + updated.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', timeZoneName: 'short' });
+  document.getElementById('last-updated').textContent = new Date(scoreData.lastUpdated).toLocaleString();
+
+  // Starfield
+  const canvas = document.getElementById('starfield');
+  const ctx = canvas.getContext('2d');
+  let stars = [];
+
+  function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    initStars();
+  }
+
+  function initStars() {
+    stars = [];
+    const count = Math.floor((canvas.width * canvas.height) / 8000);
+    for (let i = 0; i < count; i++) {
+      stars.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        size: Math.random() * 1.5 + 0.5,
+        speed: Math.random() * 0.3 + 0.1,
+        opacity: Math.random() * 0.5 + 0.3
+      });
+    }
+  }
+
+  function drawStars() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    stars.forEach(star => {
+      ctx.beginPath();
+      ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+      ctx.fillStyle = \`rgba(200, 220, 255, \${star.opacity})\`;
+      ctx.fill();
+      star.y += star.speed;
+      if (star.y > canvas.height) {
+        star.y = 0;
+        star.x = Math.random() * canvas.width;
+      }
+    });
+    requestAnimationFrame(drawStars);
+  }
+
+  window.addEventListener('resize', resizeCanvas);
+  resizeCanvas();
+  drawStars();
+
+  // Initial render
+  renderCreditChart();
+  renderRubiesChart();
+  renderChangelog(scoreData.changelog, 'credit-log');
+  renderChangelog(scoreData.rubiesLog, 'rubies-log');
+  renderCommand();
+  renderTreaties();
+  renderRules();
+  renderBills();
+  renderLore();
+})();
 <\/script>
 </body>
 </html>`;
 }
-
 
 // ── Main Handler ────────────────────────────────────────────────────────
 
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
+    const path = url.pathname;
+    const kv = env.SCORES;
 
+    // CORS preflight
     if (request.method === "OPTIONS") {
-      return new Response(null, { status: 204, headers: corsHeaders() });
+      return new Response(null, { headers: corsHeaders() });
     }
 
-    // Score/Credit/Rubies API
-    if (url.pathname === "/api/scores") {
+    // API routes
+    if (path === "/api/scores") {
       if (request.method === "GET") {
-        return handleGetScores(env.SCORES_KV);
+        return handleGetScores(kv);
       }
       if (request.method === "POST") {
-        return handlePostScores(request, env.SCORES_KV, env);
+        return handlePostScores(request, kv, env);
       }
-      return new Response("Method Not Allowed", { status: 405 });
     }
 
-    // Lore API (chain, treaties, rules, bills, lore)
-    if (url.pathname === "/api/lore") {
-      if (request.method === "GET") {
-        return handleGetLore(env.SCORES_KV);
-      }
-      if (request.method === "POST") {
-        return handlePostLore(request, env.SCORES_KV, env);
-      }
-      return new Response("Method Not Allowed", { status: 405 });
-    }
-
-    // Main page
-    if (request.method === "GET") {
-      return handlePage(env.SCORES_KV);
-    }
-
-    return new Response("Not Found", { status: 404 });
+    // Default: serve HTML page
+    return handlePage(kv);
   },
 };
