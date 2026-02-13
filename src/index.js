@@ -40,9 +40,9 @@ const DEFAULT_DATA = {
   ],
 };
 
-// ── Static Lore Data ────────────────────────────────────────────────────
+// ── Default Lore Data (used for initial migration) ────────────────────────
 
-const CHAIN_OF_COMMAND = [
+const DEFAULT_CHAIN = [
   { rank: "Admiral", name: "Elizabeth", emoji: "👑", title: "Supreme Commander", description: "The highest authority. Her word is law." },
   { rank: "Captain", name: "Strife", emoji: "🎖️", title: "Tyrant King", description: "Ruler of the USS Kittyprise. Feared and respected." },
   { rank: "First Officer", name: "Jade", emoji: "🐱", title: "First Officer", description: "Second in command. Keeper of order." },
@@ -61,7 +61,7 @@ const CHAIN_OF_COMMAND = [
   { rank: "12th Officer", name: "Penny", emoji: "🪙", title: "Officer", description: "Every penny counts." },
 ];
 
-const TREATIES = [
+const DEFAULT_TREATIES = [
   {
     name: "The Good Wednesday Agreement",
     date: "2026-02-04",
@@ -103,7 +103,7 @@ const TREATIES = [
   },
 ];
 
-const RULES = [
+const DEFAULT_RULES = [
   {
     number: "#1",
     name: "Blame Xander",
@@ -138,7 +138,7 @@ const RULES = [
   },
 ];
 
-const BILLS = [
+const DEFAULT_BILLS = [
   {
     number: "Bill #1",
     name: "Initial Rubies Allocation Act",
@@ -161,7 +161,7 @@ const BILLS = [
   },
 ];
 
-const LORE = [
+const DEFAULT_LORE = [
   {
     title: "Ruby Day",
     date: "February 7th",
@@ -213,6 +213,18 @@ async function setData(kv, data) {
   return data;
 }
 
+async function getLoreData(kv) {
+  const raw = await kv.get("lore_data", "text");
+  if (!raw) return null;
+  return JSON.parse(raw);
+}
+
+async function setLoreData(kv, lore) {
+  lore.lastUpdated = new Date().toISOString();
+  await kv.put("lore_data", JSON.stringify(lore));
+  return lore;
+}
+
 async function ensureData(kv) {
   let data = await getData(kv);
   if (!data) {
@@ -221,6 +233,29 @@ async function ensureData(kv) {
   if (!data.rubies) data.rubies = DEFAULT_DATA.rubies;
   if (!data.rubiesLog) data.rubiesLog = DEFAULT_DATA.rubiesLog;
   return data;
+}
+
+async function ensureLoreData(kv) {
+  let lore = await getLoreData(kv);
+  if (!lore) {
+    // Initial migration — store defaults
+    lore = {
+      chain: DEFAULT_CHAIN,
+      treaties: DEFAULT_TREATIES,
+      rules: DEFAULT_RULES,
+      bills: DEFAULT_BILLS,
+      lore: DEFAULT_LORE,
+      lastUpdated: new Date().toISOString(),
+    };
+    await setLoreData(kv, lore);
+  }
+  // Ensure all fields exist
+  if (!lore.chain) lore.chain = DEFAULT_CHAIN;
+  if (!lore.treaties) lore.treaties = DEFAULT_TREATIES;
+  if (!lore.rules) lore.rules = DEFAULT_RULES;
+  if (!lore.bills) lore.bills = DEFAULT_BILLS;
+  if (!lore.lore) lore.lore = DEFAULT_LORE;
+  return lore;
 }
 
 function isAuthorized(request, env) {
@@ -243,6 +278,15 @@ function corsHeaders() {
 async function handleGetScores(kv) {
   const data = await ensureData(kv);
   return new Response(JSON.stringify(data, null, 2), {
+    headers: { "Content-Type": "application/json", ...corsHeaders() },
+  });
+}
+
+// ── Route: GET /api/lore ────────────────────────────────────────────────
+
+async function handleGetLore(kv) {
+  const lore = await ensureLoreData(kv);
+  return new Response(JSON.stringify(lore, null, 2), {
     headers: { "Content-Type": "application/json", ...corsHeaders() },
   });
 }
@@ -460,11 +504,288 @@ async function handlePostScores(request, kv, env) {
   });
 }
 
+// ── Route: POST /api/lore ───────────────────────────────────────────────
+
+async function handlePostLore(request, kv, env) {
+  if (!isAuthorized(request, env)) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401,
+      headers: { "Content-Type": "application/json", ...corsHeaders() },
+    });
+  }
+
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return new Response(JSON.stringify({ error: "Invalid JSON" }), {
+      status: 400,
+      headers: { "Content-Type": "application/json", ...corsHeaders() },
+    });
+  }
+
+  const lore = await ensureLoreData(kv);
+
+  function processOp(op) {
+    switch (op.action) {
+      // ── Chain of Command ───────────────────────────────────────────
+      case "add_chain_member": {
+        const exists = lore.chain.find(
+          (c) => c.name.toLowerCase() === op.name.toLowerCase()
+        );
+        if (exists) return { error: `Chain member "${op.name}" already exists` };
+        const entry = {
+          rank: op.rank || "Civilian",
+          name: op.name,
+          emoji: op.emoji || "👤",
+          title: op.title || "Crew Member",
+          description: op.description || "",
+        };
+        // Insert at position if provided, otherwise append
+        if (op.position !== undefined && op.position >= 0) {
+          lore.chain.splice(op.position, 0, entry);
+        } else {
+          lore.chain.push(entry);
+        }
+        return { ok: true, added: op.name, section: "chain" };
+      }
+
+      case "update_chain_member": {
+        const member = lore.chain.find(
+          (c) => c.name.toLowerCase() === op.name.toLowerCase()
+        );
+        if (!member) return { error: `Chain member "${op.name}" not found` };
+        if (op.rank !== undefined) member.rank = op.rank;
+        if (op.emoji !== undefined) member.emoji = op.emoji;
+        if (op.title !== undefined) member.title = op.title;
+        if (op.description !== undefined) member.description = op.description;
+        if (op.newName !== undefined) member.name = op.newName;
+        // Handle position change
+        if (op.position !== undefined && op.position >= 0) {
+          const idx = lore.chain.findIndex(
+            (c) => c.name.toLowerCase() === (op.newName || op.name).toLowerCase()
+          );
+          if (idx !== -1 && idx !== op.position) {
+            const [removed] = lore.chain.splice(idx, 1);
+            lore.chain.splice(op.position, 0, removed);
+          }
+        }
+        return { ok: true, updated: member.name, section: "chain" };
+      }
+
+      case "remove_chain_member": {
+        const idx = lore.chain.findIndex(
+          (c) => c.name.toLowerCase() === op.name.toLowerCase()
+        );
+        if (idx === -1) return { error: `Chain member "${op.name}" not found` };
+        const name = lore.chain[idx].name;
+        lore.chain.splice(idx, 1);
+        return { ok: true, removed: name, section: "chain" };
+      }
+
+      // ── Treaties ───────────────────────────────────────────────────
+      case "add_treaty": {
+        const exists = lore.treaties.find(
+          (t) => t.name.toLowerCase() === op.name.toLowerCase()
+        );
+        if (exists) return { error: `Treaty "${op.name}" already exists` };
+        lore.treaties.push({
+          name: op.name,
+          date: op.date || new Date().toISOString().split("T")[0],
+          emoji: op.emoji || "📜",
+          summary: op.summary || "",
+          parties: op.parties || [],
+          terms: op.terms || [],
+        });
+        return { ok: true, added: op.name, section: "treaties" };
+      }
+
+      case "update_treaty": {
+        const treaty = lore.treaties.find(
+          (t) => t.name.toLowerCase() === op.name.toLowerCase()
+        );
+        if (!treaty) return { error: `Treaty "${op.name}" not found` };
+        if (op.date !== undefined) treaty.date = op.date;
+        if (op.emoji !== undefined) treaty.emoji = op.emoji;
+        if (op.summary !== undefined) treaty.summary = op.summary;
+        if (op.parties !== undefined) treaty.parties = op.parties;
+        if (op.terms !== undefined) treaty.terms = op.terms;
+        if (op.newName !== undefined) treaty.name = op.newName;
+        return { ok: true, updated: treaty.name, section: "treaties" };
+      }
+
+      case "remove_treaty": {
+        const idx = lore.treaties.findIndex(
+          (t) => t.name.toLowerCase() === op.name.toLowerCase()
+        );
+        if (idx === -1) return { error: `Treaty "${op.name}" not found` };
+        const name = lore.treaties[idx].name;
+        lore.treaties.splice(idx, 1);
+        return { ok: true, removed: name, section: "treaties" };
+      }
+
+      // ── Rules ──────────────────────────────────────────────────────
+      case "add_rule": {
+        const exists = lore.rules.find(
+          (r) => r.number.toLowerCase() === op.number.toLowerCase()
+        );
+        if (exists) return { error: `Rule "${op.number}" already exists` };
+        lore.rules.push({
+          number: op.number,
+          name: op.name,
+          emoji: op.emoji || "⚖️",
+          description: op.description || "",
+          enforcedBy: op.enforcedBy || "System",
+          penalty: op.penalty || "TBD",
+        });
+        return { ok: true, added: op.number, section: "rules" };
+      }
+
+      case "update_rule": {
+        const rule = lore.rules.find(
+          (r) => r.number.toLowerCase() === op.number.toLowerCase()
+        );
+        if (!rule) return { error: `Rule "${op.number}" not found` };
+        if (op.name !== undefined) rule.name = op.name;
+        if (op.emoji !== undefined) rule.emoji = op.emoji;
+        if (op.description !== undefined) rule.description = op.description;
+        if (op.enforcedBy !== undefined) rule.enforcedBy = op.enforcedBy;
+        if (op.penalty !== undefined) rule.penalty = op.penalty;
+        if (op.newNumber !== undefined) rule.number = op.newNumber;
+        return { ok: true, updated: rule.number, section: "rules" };
+      }
+
+      case "remove_rule": {
+        const idx = lore.rules.findIndex(
+          (r) => r.number.toLowerCase() === op.number.toLowerCase()
+        );
+        if (idx === -1) return { error: `Rule "${op.number}" not found` };
+        const number = lore.rules[idx].number;
+        lore.rules.splice(idx, 1);
+        return { ok: true, removed: number, section: "rules" };
+      }
+
+      // ── Bills ──────────────────────────────────────────────────────
+      case "add_bill": {
+        const exists = lore.bills.find(
+          (b) => b.number.toLowerCase() === op.number.toLowerCase()
+        );
+        if (exists) return { error: `Bill "${op.number}" already exists` };
+        lore.bills.push({
+          number: op.number,
+          name: op.name,
+          date: op.date || new Date().toISOString().split("T")[0],
+          status: op.status || "Pending",
+          emoji: op.emoji || "🏛️",
+          proposedBy: op.proposedBy || "Unknown",
+          summary: op.summary || "",
+          votes: op.votes || { for: 0, against: 0, abstain: 0 },
+        });
+        return { ok: true, added: op.number, section: "bills" };
+      }
+
+      case "update_bill": {
+        const bill = lore.bills.find(
+          (b) => b.number.toLowerCase() === op.number.toLowerCase()
+        );
+        if (!bill) return { error: `Bill "${op.number}" not found` };
+        if (op.name !== undefined) bill.name = op.name;
+        if (op.date !== undefined) bill.date = op.date;
+        if (op.status !== undefined) bill.status = op.status;
+        if (op.emoji !== undefined) bill.emoji = op.emoji;
+        if (op.proposedBy !== undefined) bill.proposedBy = op.proposedBy;
+        if (op.summary !== undefined) bill.summary = op.summary;
+        if (op.votes !== undefined) bill.votes = op.votes;
+        if (op.newNumber !== undefined) bill.number = op.newNumber;
+        return { ok: true, updated: bill.number, section: "bills" };
+      }
+
+      case "remove_bill": {
+        const idx = lore.bills.findIndex(
+          (b) => b.number.toLowerCase() === op.number.toLowerCase()
+        );
+        if (idx === -1) return { error: `Bill "${op.number}" not found` };
+        const number = lore.bills[idx].number;
+        lore.bills.splice(idx, 1);
+        return { ok: true, removed: number, section: "bills" };
+      }
+
+      // ── Lore Entries ───────────────────────────────────────────────
+      case "add_lore": {
+        const exists = lore.lore.find(
+          (l) => l.title.toLowerCase() === op.title.toLowerCase()
+        );
+        if (exists) return { error: `Lore entry "${op.title}" already exists` };
+        lore.lore.push({
+          title: op.title,
+          date: op.date || new Date().toISOString().split("T")[0],
+          emoji: op.emoji || "📖",
+          category: op.category || "Miscellaneous",
+          description: op.description || "",
+        });
+        return { ok: true, added: op.title, section: "lore" };
+      }
+
+      case "update_lore": {
+        const entry = lore.lore.find(
+          (l) => l.title.toLowerCase() === op.title.toLowerCase()
+        );
+        if (!entry) return { error: `Lore entry "${op.title}" not found` };
+        if (op.date !== undefined) entry.date = op.date;
+        if (op.emoji !== undefined) entry.emoji = op.emoji;
+        if (op.category !== undefined) entry.category = op.category;
+        if (op.description !== undefined) entry.description = op.description;
+        if (op.newTitle !== undefined) entry.title = op.newTitle;
+        return { ok: true, updated: entry.title, section: "lore" };
+      }
+
+      case "remove_lore": {
+        const idx = lore.lore.findIndex(
+          (l) => l.title.toLowerCase() === op.title.toLowerCase()
+        );
+        if (idx === -1) return { error: `Lore entry "${op.title}" not found` };
+        const title = lore.lore[idx].title;
+        lore.lore.splice(idx, 1);
+        return { ok: true, removed: title, section: "lore" };
+      }
+
+      // ── Bulk & Replace ─────────────────────────────────────────────
+      case "bulk": {
+        const bulkResults = [];
+        for (const subOp of op.operations || []) {
+          bulkResults.push(processOp(subOp));
+        }
+        return { ok: true, results: bulkResults };
+      }
+
+      case "replace": {
+        if (op.chain !== undefined) lore.chain = op.chain;
+        if (op.treaties !== undefined) lore.treaties = op.treaties;
+        if (op.rules !== undefined) lore.rules = op.rules;
+        if (op.bills !== undefined) lore.bills = op.bills;
+        if (op.lore !== undefined) lore.lore = op.lore;
+        return { ok: true, replaced: true };
+      }
+
+      default:
+        return { error: `Unknown action "${op.action}"` };
+    }
+  }
+
+  const result = processOp(body);
+  await setLoreData(kv, lore);
+
+  return new Response(JSON.stringify({ ...result, lore }), {
+    headers: { "Content-Type": "application/json", ...corsHeaders() },
+  });
+}
+
 // ── Route: GET / ────────────────────────────────────────────────────────
 
 async function handlePage(kv) {
   const data = await ensureData(kv);
-  const html = generateHTML(data);
+  const lore = await ensureLoreData(kv);
+  const html = generateHTML(data, lore);
   return new Response(html, {
     headers: { "Content-Type": "text/html;charset=UTF-8" },
   });
@@ -472,12 +793,12 @@ async function handlePage(kv) {
 
 // ── HTML Template ───────────────────────────────────────────────────────
 
-function generateHTML(data) {
-  const chainJSON = JSON.stringify(CHAIN_OF_COMMAND);
-  const treatiesJSON = JSON.stringify(TREATIES);
-  const rulesJSON = JSON.stringify(RULES);
-  const billsJSON = JSON.stringify(BILLS);
-  const loreJSON = JSON.stringify(LORE);
+function generateHTML(data, lore) {
+  const chainJSON = JSON.stringify(lore.chain);
+  const treatiesJSON = JSON.stringify(lore.treaties);
+  const rulesJSON = JSON.stringify(lore.rules);
+  const billsJSON = JSON.stringify(lore.bills);
+  const loreJSON = JSON.stringify(lore.lore);
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -1685,6 +2006,7 @@ function generateHTML(data) {
 </html>`;
 }
 
+
 // ── Main Handler ────────────────────────────────────────────────────────
 
 export default {
@@ -1695,6 +2017,7 @@ export default {
       return new Response(null, { status: 204, headers: corsHeaders() });
     }
 
+    // Score/Credit/Rubies API
     if (url.pathname === "/api/scores") {
       if (request.method === "GET") {
         return handleGetScores(env.SCORES_KV);
@@ -1705,6 +2028,18 @@ export default {
       return new Response("Method Not Allowed", { status: 405 });
     }
 
+    // Lore API (chain, treaties, rules, bills, lore)
+    if (url.pathname === "/api/lore") {
+      if (request.method === "GET") {
+        return handleGetLore(env.SCORES_KV);
+      }
+      if (request.method === "POST") {
+        return handlePostLore(request, env.SCORES_KV, env);
+      }
+      return new Response("Method Not Allowed", { status: 405 });
+    }
+
+    // Main page
     if (request.method === "GET") {
       return handlePage(env.SCORES_KV);
     }
