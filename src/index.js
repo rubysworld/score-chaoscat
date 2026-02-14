@@ -1897,7 +1897,7 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
     const path = url.pathname;
-    const kv = env.SCORES;
+    const kv = env.SCORES_KV;
 
     // CORS preflight
     if (request.method === "OPTIONS") {
