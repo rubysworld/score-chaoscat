@@ -781,6 +781,48 @@ async function handlePostScores(request, kv, env) {
       }
 
       // ════════════════════════════════════════════════════════════════
+      // POWERS OPERATIONS
+      // ════════════════════════════════════════════════════════════════
+      case "add_power": {
+        const newPower = {
+          id: op.id || `power-${Date.now()}`,
+          role: op.role,
+          title: op.title || "",
+          emoji: op.emoji || "⚡",
+          powers: op.powers || [],
+        };
+        if (!data.powers) data.powers = [];
+        data.powers.push(newPower);
+        return { ok: true, action: "add_power", added: newPower.role };
+      }
+
+      case "update_power": {
+        if (!data.powers) data.powers = [];
+        const power = data.powers.find(p => 
+          (op.id && p.id === op.id) || 
+          (op.role && p.role.toLowerCase() === op.role.toLowerCase())
+        );
+        if (!power) return { error: "Power entry not found" };
+        if (op.newRole !== undefined) power.role = op.newRole;
+        if (op.title !== undefined) power.title = op.title;
+        if (op.emoji !== undefined) power.emoji = op.emoji;
+        if (op.powers !== undefined) power.powers = op.powers;
+        if (op.addPower !== undefined) power.powers.push(op.addPower);
+        return { ok: true, action: "update_power", updated: power.role };
+      }
+
+      case "remove_power": {
+        if (!data.powers) return { error: "No powers exist" };
+        const idx = data.powers.findIndex(p => 
+          (op.id && p.id === op.id) || 
+          (op.role && p.role.toLowerCase() === op.role.toLowerCase())
+        );
+        if (idx === -1) return { error: "Power entry not found" };
+        const removed = data.powers.splice(idx, 1)[0];
+        return { ok: true, action: "remove_power", removed: removed.role };
+      }
+
+      // ════════════════════════════════════════════════════════════════
       // BULK / REPLACE OPERATIONS
       // ════════════════════════════════════════════════════════════════
       case "bulk": {
@@ -801,6 +843,7 @@ async function handlePostScores(request, kv, env) {
         if (op.data?.rules) data.rules = op.data.rules;
         if (op.data?.bills) data.bills = op.data.bills;
         if (op.data?.lore) data.lore = op.data.lore;
+        if (op.data?.powers) data.powers = op.data.powers;
         return { ok: true, replaced: true };
       }
 
