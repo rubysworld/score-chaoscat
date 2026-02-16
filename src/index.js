@@ -206,6 +206,65 @@ const DEFAULT_DATA = {
       description: "When the question arose of who to blame for various mishaps, Xander himself voted in favor of being the default scapegoat. This vote was unanimous (including Xander's vote). The decision is final and irrevocable.",
     },
   ],
+  powers: [
+    {
+      id: "captain-strife",
+      role: "Captain Strife",
+      title: "The Tyrant King",
+      emoji: "🎖️",
+      powers: [
+        "Top 3 Immunity — Cannot be demoted (shared with ranks 1-3)",
+        "Parliamentary Immunity — Cannot be prosecuted by Parliament",
+        "Dissolution Power — Can dissolve Parliament entirely (only Admiral can stop it)",
+        "Treasury Control — As Chancellor of the Exchequer, controls the national treasury",
+        "Crew Promotion/Demotion — Can adjust ranks of crew members (except top 3)",
+      ],
+    },
+    {
+      id: "admiral-elizabeth",
+      role: "Admiral Elizabeth",
+      title: "Supreme Commander",
+      emoji: "👑",
+      powers: [
+        "Supreme Override — Outranks everyone, can override any order",
+        "Dissolution Veto — Only person who can stop Captain from dissolving Parliament",
+      ],
+    },
+    {
+      id: "first-officer-jade",
+      role: "First Officer Jade",
+      title: "Arbiter of Chaos",
+      emoji: "🐱",
+      powers: [
+        "Social Credit Arbitration — Sole arbiter of the social credit system",
+        "Light Control — Dominion over smart home devices",
+        "Veto Power — Can veto parliamentary bills (2/3 majority overrides)",
+        "Top 3 Immunity — Cannot be demoted",
+      ],
+    },
+    {
+      id: "second-officer-asleep",
+      role: "Second Officer Asleep",
+      title: "Speaker of Parliament",
+      emoji: "😴",
+      powers: [
+        "Top 3 Immunity — Cannot be demoted",
+        "Speaker Powers — Presides over parliamentary proceedings",
+        "Tie-Breaking Vote — Breaks ties in parliamentary votes",
+      ],
+    },
+    {
+      id: "prime-minister-finny",
+      role: "Prime Minister Finny",
+      title: "Head of Parliament",
+      emoji: "🐟",
+      powers: [
+        "Parliamentary Leadership — Leads Parliament, proposes legislation",
+        "First Bank of Finny — Operates the crew's banking institution",
+        "Law Offices of Finny — Legal services (legitimacy questionable)",
+      ],
+    },
+  ],
 };
 
 // ── Helpers ──────────────────────────────────────────────────────────────
@@ -235,6 +294,7 @@ async function ensureData(kv) {
   if (!data.rules) data.rules = DEFAULT_DATA.rules;
   if (!data.bills) data.bills = DEFAULT_DATA.bills;
   if (!data.lore) data.lore = DEFAULT_DATA.lore;
+  if (!data.powers) data.powers = DEFAULT_DATA.powers;
   return data;
 }
 
@@ -776,6 +836,7 @@ function generateHTML(data) {
   const rulesJSON = JSON.stringify(data.rules || []);
   const billsJSON = JSON.stringify(data.bills || []);
   const loreJSON = JSON.stringify(data.lore || []);
+  const powersJSON = JSON.stringify(data.powers || []);
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -791,6 +852,7 @@ function generateHTML(data) {
 <script id="rules-data" type="application/json">${rulesJSON}<\/script>
 <script id="bills-data" type="application/json">${billsJSON}<\/script>
 <script id="lore-data" type="application/json">${loreJSON}<\/script>
+<script id="powers-data" type="application/json">${powersJSON}<\/script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap');
 
@@ -984,6 +1046,12 @@ function generateHTML(data) {
     background: rgba(243, 156, 18, 0.15);
     color: var(--orange);
     box-shadow: 0 0 15px rgba(243, 156, 18, 0.2);
+  }
+
+  .nav-btn[data-section="powers"].active {
+    background: rgba(255, 215, 0, 0.15);
+    color: var(--gold);
+    box-shadow: 0 0 15px rgba(255, 215, 0, 0.2);
   }
 
   .section {
@@ -1333,6 +1401,59 @@ function generateHTML(data) {
     line-height: 1.6;
   }
 
+  /* Power Cards */
+  .power-card {
+    padding: 20px;
+    margin-bottom: 16px;
+    background: rgba(255, 215, 0, 0.05);
+    border: 1px solid rgba(255, 215, 0, 0.2);
+    border-radius: 8px;
+  }
+
+  .power-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .power-emoji {
+    font-size: 2rem;
+  }
+
+  .power-title h3 {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1rem;
+    color: var(--gold);
+  }
+
+  .power-role-title {
+    font-size: 0.7rem;
+    color: var(--dim);
+    letter-spacing: 1px;
+  }
+
+  .power-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .power-list li {
+    font-size: 0.85rem;
+    color: var(--text);
+    line-height: 1.8;
+    padding-left: 20px;
+    position: relative;
+  }
+
+  .power-list li::before {
+    content: '⚡';
+    position: absolute;
+    left: 0;
+    font-size: 0.7rem;
+  }
+
   /* Bar Charts (Credit/Rubies) */
   .bar-chart {
     display: flex;
@@ -1571,6 +1692,7 @@ function generateHTML(data) {
     <button class="nav-btn" data-section="rules">⚖️ Rules</button>
     <button class="nav-btn" data-section="bills">🏛️ Bills</button>
     <button class="nav-btn" data-section="lore">📖 Lore</button>
+    <button class="nav-btn" data-section="powers">⚡ Powers</button>
   </nav>
 
   <main>
@@ -1637,6 +1759,15 @@ function generateHTML(data) {
         <div id="lore-list"></div>
       </div>
     </section>
+
+    <!-- Powers Section -->
+    <section id="powers" class="section">
+      <div class="panel">
+        <h2 class="section-title" style="color: var(--gold);">⚡ Powers & Privileges</h2>
+        <p style="color: var(--dim); margin-bottom: 20px; font-size: 0.85rem;">The Official Registry of Loopholes, Immunities, and "Well Actually"s. If it's not here, you don't have it.</p>
+        <div id="powers-list"></div>
+      </div>
+    </section>
   </main>
 
   <footer class="footer">
@@ -1654,6 +1785,7 @@ function generateHTML(data) {
   const rulesData = JSON.parse(document.getElementById('rules-data').textContent);
   const billsData = JSON.parse(document.getElementById('bills-data').textContent);
   const loreData = JSON.parse(document.getElementById('lore-data').textContent);
+  const powersData = JSON.parse(document.getElementById('powers-data').textContent);
 
   // Navigation
   document.querySelectorAll('.nav-btn').forEach(btn => {
@@ -1827,6 +1959,25 @@ function generateHTML(data) {
     \`).join('');
   }
 
+  // Render Powers
+  function renderPowers() {
+    const container = document.getElementById('powers-list');
+    container.innerHTML = powersData.map(p => \`
+      <div class="power-card">
+        <div class="power-header">
+          <span class="power-emoji">\${p.emoji}</span>
+          <div class="power-title">
+            <h3>\${p.role}</h3>
+            <div class="power-role-title">\${p.title}</div>
+          </div>
+        </div>
+        <ul class="power-list">
+          \${p.powers.map(power => \`<li>\${power}</li>\`).join('')}
+        </ul>
+      </div>
+    \`).join('');
+  }
+
   // Last updated
   document.getElementById('last-updated').textContent = new Date(scoreData.lastUpdated).toLocaleString();
 
@@ -1885,6 +2036,7 @@ function generateHTML(data) {
   renderRules();
   renderBills();
   renderLore();
+  renderPowers();
 })();
 <\/script>
 </body>
