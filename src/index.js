@@ -1762,7 +1762,7 @@ function generateHTML(data) {
         </div>
         <div style="display: flex; justify-content: space-between; font-size: 0.65rem; color: var(--dim); margin-top: 4px;">
           <span>0</span>
-          <span>1,000</span>
+          <span>5,000</span>
         </div>
       </div>
       <div class="panel rubies-section">
@@ -1878,13 +1878,13 @@ function generateHTML(data) {
   function renderRubiesChart() {
     const sorted = [...scoreData.rubies].sort((a, b) => b.balance - a.balance);
     const max = Math.max(...sorted.map(r => Math.abs(r.balance)), 100);
-    // Treasury: 1000 starting, minus total distributed to citizens (each started with 50)
+    // Treasury: 5000 starting, minus total distributed to citizens (each started with 50)
     const totalCirculating = scoreData.rubies.reduce((sum, r) => sum + r.balance, 0);
-    const treasuryBalance = 1000 - totalCirculating + (scoreData.rubies.length * 50);
+    const treasuryBalance = 5000 - totalCirculating + (scoreData.rubies.length * 50);
     const treasuryDisplay = document.getElementById('treasury-display');
     const treasuryBar = document.getElementById('treasury-bar');
     if (treasuryDisplay) treasuryDisplay.textContent = treasuryBalance.toLocaleString() + ' 💎';
-    if (treasuryBar) treasuryBar.style.width = Math.max(0, Math.min(100, (treasuryBalance / 1000) * 100)) + '%';
+    if (treasuryBar) treasuryBar.style.width = Math.max(0, Math.min(100, (treasuryBalance / 5000) * 100)) + '%';
     const container = document.getElementById('rubies-chart');
     container.innerHTML = sorted.map(r => {
       const member = scoreData.scores.find(s => s.name.toLowerCase() === r.name.toLowerCase());
