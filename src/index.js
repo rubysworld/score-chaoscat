@@ -1753,6 +1753,18 @@ function generateHTML(data) {
 
     <!-- Rubies Section -->
     <section id="rubies" class="section">
+      <div class="panel" style="text-align: center; border: 1px solid rgba(255, 77, 106, 0.3);">
+        <h2 class="section-title" style="color: var(--ruby);">🏦 National Treasury</h2>
+        <div id="treasury-display" style="font-family: 'Orbitron', sans-serif; font-size: 2.5rem; font-weight: 900; color: var(--ruby); margin: 16px 0;"></div>
+        <div style="font-size: 0.75rem; color: var(--dim); letter-spacing: 1px;">CHANCELLOR: CAPTAIN STRIFE</div>
+        <div style="margin-top: 12px; height: 6px; background: rgba(255,255,255,0.05); border-radius: 3px; overflow: hidden;">
+          <div id="treasury-bar" style="height: 100%; background: linear-gradient(90deg, var(--ruby), #ff6b8a); border-radius: 3px; transition: width 0.5s ease;"></div>
+        </div>
+        <div style="display: flex; justify-content: space-between; font-size: 0.65rem; color: var(--dim); margin-top: 4px;">
+          <span>0</span>
+          <span>1,000</span>
+        </div>
+      </div>
       <div class="panel rubies-section">
         <h2 class="section-title" style="color: var(--ruby);">💎 Rubies Balances</h2>
         <div class="bar-chart" id="rubies-chart"></div>
@@ -1866,6 +1878,13 @@ function generateHTML(data) {
   function renderRubiesChart() {
     const sorted = [...scoreData.rubies].sort((a, b) => b.balance - a.balance);
     const max = Math.max(...sorted.map(r => Math.abs(r.balance)), 100);
+    // Treasury: 1000 starting, minus total distributed to citizens (each started with 50)
+    const totalCirculating = scoreData.rubies.reduce((sum, r) => sum + r.balance, 0);
+    const treasuryBalance = 1000 - totalCirculating + (scoreData.rubies.length * 50);
+    const treasuryDisplay = document.getElementById('treasury-display');
+    const treasuryBar = document.getElementById('treasury-bar');
+    if (treasuryDisplay) treasuryDisplay.textContent = treasuryBalance.toLocaleString() + ' 💎';
+    if (treasuryBar) treasuryBar.style.width = Math.max(0, Math.min(100, (treasuryBalance / 1000) * 100)) + '%';
     const container = document.getElementById('rubies-chart');
     container.innerHTML = sorted.map(r => {
       const member = scoreData.scores.find(s => s.name.toLowerCase() === r.name.toLowerCase());
