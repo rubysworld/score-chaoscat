@@ -376,7 +376,7 @@ async function handlePostScores(request, kv, env) {
           const changeStr = delta >= 0 ? `+${delta}` : `${delta}`;
           if (op.reason) {
             data.rubiesLog.unshift({
-              date: new Date().toISOString().split("T")[0],
+              date: new Date().toISOString(),
               who: rubyEntry.name,
               change: changeStr,
               reason: op.reason,
@@ -394,7 +394,7 @@ async function handlePostScores(request, kv, env) {
           const changeStr = delta >= 0 ? `+${delta}` : `${delta}`;
           if (op.reason) {
             data.changelog.unshift({
-              date: new Date().toISOString().split("T")[0],
+              date: new Date().toISOString(),
               who: member.name,
               change: changeStr,
               reason: op.reason,
@@ -423,7 +423,7 @@ async function handlePostScores(request, kv, env) {
           const changeStr = delta >= 0 ? `+${delta}` : `${delta}`;
           if (op.reason) {
             data.rubiesLog.unshift({
-              date: new Date().toISOString().split("T")[0],
+              date: new Date().toISOString(),
               who: rubyEntry.name,
               change: changeStr,
               reason: op.reason,
@@ -442,7 +442,7 @@ async function handlePostScores(request, kv, env) {
           const changeStr = delta >= 0 ? `+${delta}` : `${delta}`;
           if (op.reason) {
             data.changelog.unshift({
-              date: new Date().toISOString().split("T")[0],
+              date: new Date().toISOString(),
               who: member.name,
               change: changeStr,
               reason: op.reason,
@@ -454,7 +454,7 @@ async function handlePostScores(request, kv, env) {
 
       case "add_log": {
         const logEntry = {
-          date: op.date || new Date().toISOString().split("T")[0],
+          date: op.date || new Date().toISOString(),
           who: op.who,
           change: op.change,
           reason: op.reason,
@@ -600,7 +600,7 @@ async function handlePostScores(request, kv, env) {
         const newTreaty = {
           id: op.id || `treaty-${Date.now()}`,
           name: op.name,
-          date: op.date || new Date().toISOString().split("T")[0],
+          date: op.date || new Date().toISOString(),
           emoji: op.emoji || "📜",
           summary: op.summary || "",
           parties: op.parties || [],
@@ -701,7 +701,7 @@ async function handlePostScores(request, kv, env) {
           id: op.id || `bill-${billCount + 1}`,
           number: op.number || `Bill #${billCount + 1}`,
           name: op.name,
-          date: op.date || new Date().toISOString().split("T")[0],
+          date: op.date || new Date().toISOString(),
           status: op.status || "Pending",
           emoji: op.emoji || "📋",
           proposedBy: op.proposedBy || "Parliament",
@@ -754,7 +754,7 @@ async function handlePostScores(request, kv, env) {
         const newLore = {
           id: op.id || `lore-${Date.now()}`,
           title: op.title,
-          date: op.date || new Date().toISOString().split("T")[0],
+          date: op.date || new Date().toISOString(),
           emoji: op.emoji || "📖",
           category: op.category || "Event",
           description: op.description || "",
@@ -863,7 +863,7 @@ async function handlePostScores(request, kv, env) {
         const changeStr = delta >= 0 ? `+${delta}` : `${delta}`;
         if (op.reason) {
           data.businessLog.unshift({
-            date: new Date().toISOString().split("T")[0],
+            date: new Date().toISOString(),
             who: biz.name,
             change: changeStr,
             reason: op.reason,
@@ -891,7 +891,7 @@ async function handlePostScores(request, kv, env) {
         const changeStr = delta >= 0 ? `+${delta}` : `${delta}`;
         if (op.reason) {
           data.businessLog.unshift({
-            date: new Date().toISOString().split("T")[0],
+            date: new Date().toISOString(),
             who: biz.name,
             change: changeStr,
             reason: op.reason,
@@ -1994,12 +1994,20 @@ function generateHTML(data) {
     }).join('');
   }
 
+  // Format date to local timezone (handles both ISO timestamps and YYYY-MM-DD)
+  function formatLocalDate(dateStr) {
+    if (!dateStr) return '';
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return dateStr;
+    return d.toLocaleDateString();
+  }
+
   // Render Changelog
   function renderChangelog(entries, containerId) {
     const container = document.getElementById(containerId);
     container.innerHTML = entries.slice(0, 50).map(e => \`
       <div class="changelog-entry">
-        <span class="changelog-date">\${e.date}</span>
+        <span class="changelog-date">\${formatLocalDate(e.date)}</span>
         <span class="changelog-who">\${e.who}</span>
         <span class="changelog-change \${e.change.startsWith('+') ? 'positive' : 'negative'}">\${e.change}</span>
         <span class="changelog-reason">\${e.reason}</span>
@@ -2033,7 +2041,7 @@ function generateHTML(data) {
           <span class="treaty-emoji">\${t.emoji}</span>
           <div class="treaty-title">
             <h3>\${t.name}</h3>
-            <div class="treaty-date">Signed: \${t.date}</div>
+            <div class="treaty-date">Signed: \${formatLocalDate(t.date)}</div>
           </div>
         </div>
         <p class="treaty-summary">\${t.summary}</p>
@@ -2078,7 +2086,7 @@ function generateHTML(data) {
         </div>
         <p class="bill-summary">\${b.summary}</p>
         <div class="bill-meta">
-          <span><strong>Date:</strong> \${b.date}</span>
+          <span><strong>Date:</strong> \${formatLocalDate(b.date)}</span>
           <span><strong>Proposed by:</strong> \${b.proposedBy}</span>
           <span class="bill-votes">
             <strong>Votes:</strong>
@@ -2101,7 +2109,7 @@ function generateHTML(data) {
           <div class="lore-title">
             <h3>\${l.title}</h3>
             <div class="lore-category">\${l.category}</div>
-            <div class="lore-date">\${l.date}</div>
+            <div class="lore-date">\${formatLocalDate(l.date)}</div>
           </div>
         </div>
         <p class="lore-desc">\${l.description}</p>
