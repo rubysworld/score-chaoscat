@@ -302,6 +302,13 @@ async function ensureData(kv) {
   if (!data.bills) data.bills = DEFAULT_DATA.bills;
   if (!data.lore) data.lore = DEFAULT_DATA.lore;
   if (!data.powers) data.powers = DEFAULT_DATA.powers;
+  // Backfill vatOwed on all rubies and businesses
+  for (const r of data.rubies) {
+    if (r.vatOwed === undefined) r.vatOwed = 0;
+  }
+  for (const b of data.businesses) {
+    if (b.vatOwed === undefined) b.vatOwed = 0;
+  }
   return data;
 }
 
@@ -898,6 +905,85 @@ async function handlePostScores(request, kv, env) {
           });
         }
         return { ok: true, action: "set_business_score", name: biz.name, newBalance: biz.balance };
+      }
+
+      // ════════════════════════════════════════════════════════════════
+      // VAT OPERATIONS
+      // ════════════════════════════════════════════════════════════════
+      case "add_vat": {
+        const vatType = op.type || "personal";
+        const amount = parseFloat(op.amount);
+        if (isNaN(amount) || amount <= 0) return { error: "amount must be a positive number" };
+        if (!op.name) return { error: "name is required" };
+
+        if (vatType === "business") {
+          const biz = data.businesses.find(b => b.name.toLowerCase() === op.name.toLowerCase());
+          if (!biz) return { error: `Business "${op.name}" not found` };
+          if (biz.vatOwed === undefined) biz.vatOwed = 0;
+          biz.vatOwed += amount;
+          data.businessLog.unshift({
+            date: new Date().toISOString(),
+            who: biz.name,
+            change: `+${amount} VAT`,
+            reason: op.reason || "VAT assessed",
+          });
+          return { ok: true, action: "add_vat", name: biz.name, type: "business", vatOwed: biz.vatOwed };
+        } else {
+          const person = data.rubies.find(r => r.name.toLowerCase() === op.name.toLowerCase());
+          if (!person) return { error: `Person "${op.name}" not found` };
+          if (person.vatOwed === undefined) person.vatOwed = 0;
+          person.vatOwed += amount;
+          data.rubiesLog.unshift({
+            date: new Date().toISOString(),
+            who: person.name,
+            change: `+${amount} VAT`,
+            reason: op.reason || "VAT assessed",
+          });
+          return { ok: true, action: "add_vat", name: person.name, type: "personal", vatOwed: person.vatOwed };
+        }
+      }
+
+      case "collect_vat": {
+        const collected = [];
+        let totalCollected = 0;
+
+        // Collect from all persons
+        for (const person of data.rubies) {
+          if (person.vatOwed === undefined) person.vatOwed = 0;
+          if (person.vatOwed > 0) {
+            const amt = person.vatOwed;
+            person.balance -= amt;
+            totalCollected += amt;
+            collected.push({ name: person.name, type: "personal", amount: amt, newBalance: person.balance });
+            data.rubiesLog.unshift({
+              date: new Date().toISOString(),
+              who: person.name,
+              change: `-${amt}`,
+              reason: `VAT collected (${amt}💎 owed)`,
+            });
+            person.vatOwed = 0;
+          }
+        }
+
+        // Collect from all businesses
+        for (const biz of data.businesses) {
+          if (biz.vatOwed === undefined) biz.vatOwed = 0;
+          if (biz.vatOwed > 0) {
+            const amt = biz.vatOwed;
+            biz.balance -= amt;
+            totalCollected += amt;
+            collected.push({ name: biz.name, type: "business", amount: amt, newBalance: biz.balance });
+            data.businessLog.unshift({
+              date: new Date().toISOString(),
+              who: biz.name,
+              change: `-${amt}`,
+              reason: `VAT collected (${amt}💎 owed)`,
+            });
+            biz.vatOwed = 0;
+          }
+        }
+
+        return { ok: true, action: "collect_vat", totalCollected, collected };
       }
 
       // ════════════════════════════════════════════════════════════════
@@ -1986,6 +2072,7 @@ function generateHTML(data) {
             </div>
           </div>
           <div style="font-family: 'Orbitron', sans-serif; font-size: 1.8rem; font-weight: 900; color: \${r.balance >= 0 ? 'var(--green)' : 'var(--red)'};">\${r.balance.toLocaleString()} 💎</div>
+          \${r.vatOwed > 0 ? \`<div style="font-family: 'Orbitron', sans-serif; font-size: 0.85rem; font-weight: 700; color: var(--red); margin-top: 8px; padding: 4px 8px; background: rgba(255, 51, 85, 0.15); border-radius: 4px; display: inline-block;">⚠️ VAT OWED: \${r.vatOwed}💎</div>\` : ''}
         </div>
       \`;
     }).join('');
@@ -2148,6 +2235,7 @@ function generateHTML(data) {
           </div>
         </div>
         <div style="font-family: 'Orbitron', sans-serif; font-size: 1.8rem; font-weight: 900; color: \${b.balance >= 0 ? 'var(--green)' : 'var(--red)'};">\${b.balance.toLocaleString()} 💎</div>
+        \${b.vatOwed > 0 ? \`<div style="font-family: 'Orbitron', sans-serif; font-size: 0.85rem; font-weight: 700; color: var(--red); margin-top: 8px; padding: 4px 8px; background: rgba(255, 51, 85, 0.15); border-radius: 4px; display: inline-block;">⚠️ VAT OWED: \${b.vatOwed}💎</div>\` : ''}
       </div>
     \`).join('');
   }
