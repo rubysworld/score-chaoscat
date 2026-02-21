@@ -39,6 +39,11 @@ const DEFAULT_DATA = {
   rubiesLog: [
     { date: "2026-02-11", who: "All Citizens", change: "+50", reason: "Initial allocation per Bill #1" },
   ],
+  businesses: [
+    { name: "First Bank of Finny", owner: "Finny", emoji: "🏦", balance: 0 },
+    { name: "Law Offices of Finny", owner: "Finny", emoji: "⚖️", balance: 0 },
+  ],
+  businessLog: [],
   // Dynamic lore sections (now editable via API!)
   chain: [
     { rank: "Admiral", name: "Elizabeth", emoji: "👑", title: "Supreme Commander", description: "The highest authority. Her word is law." },
@@ -289,6 +294,8 @@ async function ensureData(kv) {
   // Backfill any missing sections
   if (!data.rubies) data.rubies = DEFAULT_DATA.rubies;
   if (!data.rubiesLog) data.rubiesLog = DEFAULT_DATA.rubiesLog;
+  if (!data.businesses) data.businesses = DEFAULT_DATA.businesses;
+  if (!data.businessLog) data.businessLog = DEFAULT_DATA.businessLog;
   if (!data.chain) data.chain = DEFAULT_DATA.chain;
   if (!data.treaties) data.treaties = DEFAULT_DATA.treaties;
   if (!data.rules) data.rules = DEFAULT_DATA.rules;
@@ -823,6 +830,66 @@ async function handlePostScores(request, kv, env) {
       }
 
       // ════════════════════════════════════════════════════════════════
+      // BUSINESS OPERATIONS
+      // ════════════════════════════════════════════════════════════════
+      case "add_business": {
+        if (!op.name) return { error: "Business name required" };
+        if (data.businesses.find(b => b.name.toLowerCase() === op.name.toLowerCase())) {
+          return { error: `Business "${op.name}" already exists` };
+        }
+        const newBiz = {
+          name: op.name,
+          owner: op.owner || "Unknown",
+          emoji: op.emoji || "🏢",
+          balance: op.balance ?? 0,
+        };
+        data.businesses.push(newBiz);
+        return { ok: true, action: "add_business", added: newBiz.name };
+      }
+
+      case "remove_business": {
+        const bizIdx = data.businesses.findIndex(b => b.name.toLowerCase() === op.name.toLowerCase());
+        if (bizIdx === -1) return { error: `Business "${op.name}" not found` };
+        const removedBiz = data.businesses.splice(bizIdx, 1)[0];
+        return { ok: true, action: "remove_business", removed: removedBiz.name };
+      }
+
+      case "update_business_score": {
+        const biz = data.businesses.find(b => b.name.toLowerCase() === op.name.toLowerCase());
+        if (!biz) return { error: `Business "${op.name}" not found` };
+        const delta = parseInt(op.delta, 10);
+        biz.balance += delta;
+        const changeStr = delta >= 0 ? `+${delta}` : `${delta}`;
+        if (op.reason) {
+          data.businessLog.unshift({
+            date: new Date().toISOString().split("T")[0],
+            who: biz.name,
+            change: changeStr,
+            reason: op.reason,
+          });
+        }
+        return { ok: true, action: "update_business_score", name: biz.name, newBalance: biz.balance };
+      }
+
+      case "set_business_score": {
+        const biz = data.businesses.find(b => b.name.toLowerCase() === op.name.toLowerCase());
+        if (!biz) return { error: `Business "${op.name}" not found` };
+        const oldBalance = biz.balance;
+        biz.balance = parseInt(op.score, 10);
+        const delta = biz.balance - oldBalance;
+        const changeStr = delta >= 0 ? `+${delta}` : `${delta}`;
+        if (op.reason) {
+          data.businessLog.unshift({
+            date: new Date().toISOString().split("T")[0],
+            who: biz.name,
+            change: changeStr,
+            reason: op.reason,
+          });
+        }
+        return { ok: true, action: "set_business_score", name: biz.name, newBalance: biz.balance };
+      }
+
+      // ════════════════════════════════════════════════════════════════
       // BULK / REPLACE OPERATIONS
       // ════════════════════════════════════════════════════════════════
       case "bulk": {
@@ -844,6 +911,8 @@ async function handlePostScores(request, kv, env) {
         if (op.data?.bills) data.bills = op.data.bills;
         if (op.data?.lore) data.lore = op.data.lore;
         if (op.data?.powers) data.powers = op.data.powers;
+        if (op.data?.businesses) data.businesses = op.data.businesses;
+        if (op.data?.businessLog) data.businessLog = op.data.businessLog;
         return { ok: true, replaced: true };
       }
 
@@ -1769,6 +1838,14 @@ function generateHTML(data) {
         <h2 class="section-title" style="color: var(--ruby);">💎 Rubies Balances</h2>
         <div class="bar-chart" id="rubies-chart"></div>
       </div>
+      <div class="panel" style="border-color: rgba(243, 156, 18, 0.3);">
+        <h2 class="section-title" style="color: var(--orange);">🏢 Business Entities</h2>
+        <div id="business-cards" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px;"></div>
+      </div>
+      <div class="panel">
+        <h2 class="section-title" style="color: var(--orange);">📒 Business Ledger</h2>
+        <div class="changelog" id="business-log"></div>
+      </div>
       <div class="panel">
         <h2 class="section-title" style="color: var(--ruby);">💎 Rubies Ledger</h2>
         <div class="changelog" id="rubies-log"></div>
@@ -2040,6 +2117,24 @@ function generateHTML(data) {
     \`).join('');
   }
 
+  // Render Business Cards
+  function renderBusinessCards() {
+    const container = document.getElementById('business-cards');
+    const businesses = scoreData.businesses || [];
+    container.innerHTML = businesses.map(b => \`
+      <div style="padding: 20px; background: rgba(243, 156, 18, 0.05); border: 1px solid rgba(243, 156, 18, 0.2); border-radius: 8px;">
+        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+          <span style="font-size: 2rem;">\${b.emoji}</span>
+          <div>
+            <div style="font-family: 'Orbitron', sans-serif; font-size: 0.9rem; color: var(--orange);">\${b.name}</div>
+            <div style="font-size: 0.7rem; color: var(--dim); letter-spacing: 1px;">OWNER: \${b.owner.toUpperCase()}</div>
+          </div>
+        </div>
+        <div style="font-family: 'Orbitron', sans-serif; font-size: 1.8rem; font-weight: 900; color: \${b.balance >= 0 ? 'var(--green)' : 'var(--red)'};">\${b.balance.toLocaleString()} 💎</div>
+      </div>
+    \`).join('');
+  }
+
   // Last updated
   document.getElementById('last-updated').textContent = new Date(scoreData.lastUpdated).toLocaleString();
 
@@ -2093,6 +2188,8 @@ function generateHTML(data) {
   renderRubiesChart();
   renderChangelog(scoreData.changelog, 'credit-log');
   renderChangelog(scoreData.rubiesLog, 'rubies-log');
+  renderBusinessCards();
+  renderChangelog(scoreData.businessLog || [], 'business-log');
   renderCommand();
   renderTreaties();
   renderRules();
