@@ -1847,7 +1847,7 @@ function generateHTML(data) {
       </div>
       <div class="panel rubies-section">
         <h2 class="section-title" style="color: var(--ruby);">💎 Rubies Balances</h2>
-        <div class="bar-chart" id="rubies-chart"></div>
+        <div id="rubies-cards" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px;"></div>
       </div>
       <div class="panel" style="border-color: rgba(243, 156, 18, 0.3);">
         <h2 class="section-title" style="color: var(--orange);">🏢 Business Entities</h2>
@@ -1973,22 +1973,19 @@ function generateHTML(data) {
     const treasuryBar = document.getElementById('treasury-bar');
     if (treasuryDisplay) treasuryDisplay.textContent = treasuryBalance.toLocaleString() + ' 💎';
     if (treasuryBar) treasuryBar.style.width = Math.max(0, Math.min(100, (treasuryBalance / 5000) * 100)) + '%';
-    const container = document.getElementById('rubies-chart');
+    const container = document.getElementById('rubies-cards');
     container.innerHTML = sorted.map(r => {
       const member = scoreData.scores.find(s => s.name.toLowerCase() === r.name.toLowerCase());
       const emoji = member?.emoji || '👤';
       return \`
-        <div class="bar-row">
-          <div class="bar-label">
-            <span class="bar-emoji">\${emoji}</span>
+        <div style="padding: 20px; background: rgba(224, 17, 95, 0.05); border: 1px solid rgba(224, 17, 95, 0.2); border-radius: 8px;">
+          <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+            <span style="font-size: 2rem;">\${emoji}</span>
             <div>
-              <div class="bar-name">\${r.name}</div>
+              <div style="font-family: 'Orbitron', sans-serif; font-size: 0.9rem; color: var(--ruby);">\${r.name}</div>
             </div>
           </div>
-          <div class="bar-track">
-            <div class="bar-fill" style="width: \${(Math.abs(r.balance) / max) * 100}%"></div>
-          </div>
-          <div class="bar-value">\${r.balance}</div>
+          <div style="font-family: 'Orbitron', sans-serif; font-size: 1.8rem; font-weight: 900; color: \${r.balance >= 0 ? 'var(--green)' : 'var(--red)'};">\${r.balance.toLocaleString()} 💎</div>
         </div>
       \`;
     }).join('');
