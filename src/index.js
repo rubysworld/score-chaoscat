@@ -1956,7 +1956,7 @@ function generateHTML(data) {
     const sorted = [...scoreData.rubies].sort((a, b) => b.balance - a.balance);
     const max = Math.max(...sorted.map(r => Math.abs(r.balance)), 100);
     // Treasury: 5000 starting, minus total distributed to citizens (each started with 50)
-    const totalCirculating = scoreData.rubies.reduce((sum, r) => sum + r.balance, 0);
+    const totalCirculating = scoreData.rubies.reduce((sum, r) => sum + r.balance, 0) + (scoreData.businesses || []).reduce((sum, b) => sum + b.balance, 0);
     const treasuryBalance = 5000 - totalCirculating + (scoreData.rubies.length * 50);
     const treasuryDisplay = document.getElementById('treasury-display');
     const treasuryBar = document.getElementById('treasury-bar');
