@@ -2007,7 +2007,7 @@ function generateHTML(data) {
     const container = document.getElementById(containerId);
     container.innerHTML = entries.slice(0, 50).map(e => \`
       <div class="changelog-entry">
-        <span class="changelog-date">\${formatLocalDate(e.date)}</span>
+        <span class="changelog-date" title="\${new Date(e.date).toLocaleString()}">\${formatLocalDate(e.date)}</span>
         <span class="changelog-who">\${e.who}</span>
         <span class="changelog-change \${e.change.startsWith('+') ? 'positive' : 'negative'}">\${e.change}</span>
         <span class="changelog-reason">\${e.reason}</span>
@@ -2041,7 +2041,7 @@ function generateHTML(data) {
           <span class="treaty-emoji">\${t.emoji}</span>
           <div class="treaty-title">
             <h3>\${t.name}</h3>
-            <div class="treaty-date">Signed: \${formatLocalDate(t.date)}</div>
+            <div class="treaty-date" title="\${new Date(t.date).toLocaleString()}">Signed: \${formatLocalDate(t.date)}</div>
           </div>
         </div>
         <p class="treaty-summary">\${t.summary}</p>
@@ -2086,7 +2086,7 @@ function generateHTML(data) {
         </div>
         <p class="bill-summary">\${b.summary}</p>
         <div class="bill-meta">
-          <span><strong>Date:</strong> \${formatLocalDate(b.date)}</span>
+          <span title="\${new Date(b.date).toLocaleString()}"><strong>Date:</strong> \${formatLocalDate(b.date)}</span>
           <span><strong>Proposed by:</strong> \${b.proposedBy}</span>
           <span class="bill-votes">
             <strong>Votes:</strong>
@@ -2109,7 +2109,7 @@ function generateHTML(data) {
           <div class="lore-title">
             <h3>\${l.title}</h3>
             <div class="lore-category">\${l.category}</div>
-            <div class="lore-date">\${formatLocalDate(l.date)}</div>
+            <div class="lore-date" title="\${new Date(l.date).toLocaleString()}">\${formatLocalDate(l.date)}</div>
           </div>
         </div>
         <p class="lore-desc">\${l.description}</p>
