@@ -40,8 +40,8 @@ const DEFAULT_DATA = {
     { date: "2026-02-11", who: "All Citizens", change: "+50", reason: "Initial allocation per Bill #1" },
   ],
   businesses: [
-    { name: "First Bank of Finny", owner: "Finny", emoji: "🏦", balance: 0 },
-    { name: "Law Offices of Finny", owner: "Finny", emoji: "⚖️", balance: 0 },
+    { name: "First Bank of Finny", owner: "Finny", emoji: "🏦", balance: 0, licensedBy: "Chancellor Strife" },
+    { name: "Law Offices of Finny", owner: "Finny", emoji: "⚖️", balance: 0, licensedBy: "Chancellor Strife" },
   ],
   businessLog: [],
   // Dynamic lore sections (now editable via API!)
@@ -843,6 +843,7 @@ async function handlePostScores(request, kv, env) {
           emoji: op.emoji || "🏢",
           balance: op.balance ?? 0,
         };
+        if (op.licensedBy) newBiz.licensedBy = op.licensedBy;
         data.businesses.push(newBiz);
         return { ok: true, action: "add_business", added: newBiz.name };
       }
@@ -869,6 +870,16 @@ async function handlePostScores(request, kv, env) {
           });
         }
         return { ok: true, action: "update_business_score", name: biz.name, newBalance: biz.balance };
+      }
+
+      case "update_business": {
+        const biz = data.businesses.find(b => b.name.toLowerCase() === op.name.toLowerCase());
+        if (!biz) return { error: `Business "${op.name}" not found` };
+        if (op.newName !== undefined) biz.name = op.newName;
+        if (op.owner !== undefined) biz.owner = op.owner;
+        if (op.emoji !== undefined) biz.emoji = op.emoji;
+        if (op.licensedBy !== undefined) biz.licensedBy = op.licensedBy;
+        return { ok: true, action: "update_business", updated: biz.name };
       }
 
       case "set_business_score": {
@@ -2128,6 +2139,7 @@ function generateHTML(data) {
           <div>
             <div style="font-family: 'Orbitron', sans-serif; font-size: 0.9rem; color: var(--orange);">\${b.name}</div>
             <div style="font-size: 0.7rem; color: var(--dim); letter-spacing: 1px;">OWNER: \${b.owner.toUpperCase()}</div>
+            \${b.licensedBy ? \`<div style="font-size: 0.65rem; color: var(--gold); letter-spacing: 1px; margin-top: 2px;">LICENSED BY: \${b.licensedBy.toUpperCase()}</div>\` : ''}
           </div>
         </div>
         <div style="font-family: 'Orbitron', sans-serif; font-size: 1.8rem; font-weight: 900; color: \${b.balance >= 0 ? 'var(--green)' : 'var(--red)'};">\${b.balance.toLocaleString()} 💎</div>
